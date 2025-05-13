@@ -230,11 +230,31 @@ class JefaturaController extends BaseController
             ];
 
             if ($registroExistente) {
-                $this->histModel->update($registroExistente['id_historial'], $data);
-            } else {
-                
-                $this->histModel->insertarSinDuplicar($data);
+                $cambio = false;
 
+                // Verifica si hubo cambio
+                if (
+                    $registroExistente['resultado_real'] != $valor ||
+                    $registroExistente['comentario'] != ($post['comentario'][$clave] ?? null)
+                ) {
+                    $cambio = true;
+                }
+
+                $this->histModel->update($registroExistente['id_historial'], $data);
+
+                if ($cambio) {
+                    $auditoriaModel = new IndicadorAuditoriaModel();
+                    $auditoriaModel->insert([
+                        'id_historial'    => $registroExistente['id_historial'],
+                        'editor_id'       => session()->get('id_users'),
+                        'campo'           => 'resultado_real',
+                        'valor_anterior'  => $registroExistente['resultado_real'],
+                        'valor_nuevo'     => $valor,
+                    ]);
+                }
+            } else {
+
+                $this->histModel->insertarSinDuplicar($data);
             }
         }
 
