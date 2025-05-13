@@ -38,7 +38,7 @@
                 <div class="card shadow-lg my-5">
                     <div class="card-body p-4 p-sm-5">
                         <div class="text-center mb-4">
-                            <img src="http://localhost/Afilogro/public/img/logoafilogro.png" alt="Logo Afilogro" class="img-fluid" style="max-height: 80px;">
+                            <img src="<?= base_url('img/logoafilogro.png') ?>" alt="Logo Afilogro" class="img-fluid" style="max-height: 80px;">
                             <h2 class="mt-3 mb-0">Iniciar Sesión</h2>
                             <p class="text-muted">Ingresa tus credenciales para continuar</p>
                         </div>
@@ -104,9 +104,9 @@
                             
                             <!-- Enlaces adicionales -->
                             <div class="text-center mt-3">
-                                <a href="http://localhost/Afilogro/public/forgot-password" class="text-decoration-none">¿Olvidaste tu contraseña?</a>
+                                <a href="<?= base_url('forgot-password') ?>" class="text-decoration-none">¿Olvidaste tu contraseña?</a>
                                 <span class="mx-2">•</span>
-                                <a href="http://localhost/Afilogro/public/register" class="text-decoration-none">Registrarse</a>
+                                <a href="<?= base_url('register') ?>" class="text-decoration-none">Registrarse</a>
                             </div>
                         </form>
                     </div>
