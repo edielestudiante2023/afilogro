@@ -14,4 +14,20 @@ class HistorialIndicadorModel extends Model
     protected $useTimestamps    = true;
     protected $createdField     = 'fecha_registro';
     protected $updatedField     = '';
+
+   public function insertarSinDuplicar($data)
+{
+    $existe = $this->where('id_indicador_perfil', $data['id_indicador_perfil'])
+                   ->where('id_usuario', $data['id_usuario'])
+                   ->where('periodo', $data['periodo'])
+                   ->first();
+
+    if (! $existe) {
+        return $this->insert($data);
+    } else {
+        return $this->update($existe['id_historial'], $data);
+    }
+}
+
+
 }

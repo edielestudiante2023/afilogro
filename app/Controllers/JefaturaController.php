@@ -110,7 +110,7 @@ class JefaturaController extends BaseController
     {
         $session = session();
         $userId  = $session->get('id_users');
-    
+
         $historial = $this->histModel
             ->select('
                 historial_indicadores.*,
@@ -127,10 +127,10 @@ class JefaturaController extends BaseController
             ->where('historial_indicadores.id_usuario', $userId)
             ->orderBy('fecha_registro', 'DESC')
             ->findAll();
-    
+
         return view('jefatura/historialmisindicadoresfeje', ['historial' => $historial]);
     }
-    
+
 
     public function historialLosIndicadoresDeMiEquipo()
     {
@@ -205,35 +205,41 @@ class JefaturaController extends BaseController
 
     public function saveIndicadoresComoJefe()
     {
-        $session = session();
-        $jefeId  = $session->get('id_users');
-        $periodo = date('Y-m');
         $post    = $this->request->getPost();
+        $periodo = date('Y-m');
 
-        // Verificar si ya reportó como jefe en este periodo
-       /*  $yaReportado = $this->histModel
-            ->where('id_usuario', $jefeId)
-            ->where('periodo', $periodo)
-            ->first();
+        foreach ($post['resultado_real'] as $clave => $valor) {
 
-        if ($yaReportado) {
-            return redirect()->to('/jefatura/misindicadorescomojefe')
-                ->with('error', 'Ya has registrado tus resultados como jefe para este periodo.');
-        } */
+            // La clave ahora es "id_indicador_perfil_id_usuario"
+            [$ipId, $idUsuario] = explode('_', $clave);
 
-        foreach ($post['resultado_real'] as $ipId => $valor) {
+            $registroExistente = $this->histModel
+                ->where('id_indicador_perfil', $ipId)
+                ->where('id_usuario', $idUsuario)
+                ->where('periodo', $periodo)
+                ->first();
+
             $data = [
                 'id_indicador_perfil' => $ipId,
-                'id_usuario'          => $jefeId,
+                'id_usuario'          => $idUsuario,
                 'periodo'             => $periodo,
                 'valores_json'        => json_encode(['valor' => $valor]),
                 'resultado_real'      => $valor,
-                'comentario'          => $post['comentario'][$ipId] ?? null
+                'comentario'          => $post['comentario'][$clave] ?? null,
+                'fecha_registro'      => date('Y-m-d H:i:s')
             ];
-            $this->histModel->insert($data);
+
+            if ($registroExistente) {
+                $this->histModel->update($registroExistente['id_historial'], $data);
+            } else {
+                
+                $this->histModel->insertarSinDuplicar($data);
+
+            }
         }
 
-        return redirect()->to('/jefatura/historialmisindicadoresfeje')
-            ->with('success', 'Resultados como jefe registrados correctamente.');
+
+        return redirect()->to('/jefatura/historiallosindicadoresdemiequipo')
+            ->with('success', 'Indicadores del equipo actualizados correctamente.');
     }
 }

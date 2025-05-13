@@ -35,22 +35,34 @@
                 </thead>
                 <tbody>
                     <?php foreach ($equipo as $indicador): ?>
-
+                        <?php $clave = $indicador['id_indicador_perfil'] . '_' . $indicador['id_usuario']; ?>
                         <tr>
-                            <td><?= esc($indicador['nombre_completo']) ?></td>
+                            <td>
+                                <?= esc($indicador['nombre_completo']) ?>
+                                <input type="hidden"
+                                    name="id_usuario[<?= $clave ?>]"
+                                    value="<?= esc($indicador['id_usuario']) ?>">
+                            </td>
 
                             <td><?= esc($indicador['nombre_indicador']) ?></td>
+
                             <td>
-                                <input type="text" name="resultado_real[<?= $indicador['id_indicador_perfil'] ?>]"
-                                    value="<?= esc($indicador['resultado_real']) ?>" class="form-control">
+                                <input type="text"
+                                    name="resultado_real[<?= $clave ?>]"
+                                    value="<?= esc($indicador['resultado_real']) ?>"
+                                    class="form-control">
                             </td>
+
                             <td>
-                                <input type="text" name="comentario[<?= $indicador['id_indicador_perfil'] ?>]"
-                                    value="<?= esc($indicador['comentario']) ?>" class="form-control">
+                                <input type="text"
+                                    name="comentario[<?= $clave ?>]"
+                                    value="<?= esc($indicador['comentario']) ?>"
+                                    class="form-control">
                             </td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
+
             </table>
             <button type="submit" class="btn btn-success">Guardar Cambios</button>
         </form>
