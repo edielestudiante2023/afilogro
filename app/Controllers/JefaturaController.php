@@ -211,7 +211,7 @@ class JefaturaController extends BaseController
         $post    = $this->request->getPost();
 
         // Verificar si ya reportó como jefe en este periodo
-        $yaReportado = $this->histModel
+       /*  $yaReportado = $this->histModel
             ->where('id_usuario', $jefeId)
             ->where('periodo', $periodo)
             ->first();
@@ -219,7 +219,7 @@ class JefaturaController extends BaseController
         if ($yaReportado) {
             return redirect()->to('/jefatura/misindicadorescomojefe')
                 ->with('error', 'Ya has registrado tus resultados como jefe para este periodo.');
-        }
+        } */
 
         foreach ($post['resultado_real'] as $ipId => $valor) {
             $data = [
