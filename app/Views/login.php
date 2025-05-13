@@ -103,11 +103,11 @@
                             </div>
                             
                             <!-- Enlaces adicionales -->
-                            <div class="text-center mt-3">
+                            <!-- <div class="text-center mt-3">
                                 <a href="<?= base_url('forgot-password') ?>" class="text-decoration-none">¿Olvidaste tu contraseña?</a>
                                 <span class="mx-2">•</span>
                                 <a href="<?= base_url('register') ?>" class="text-decoration-none">Registrarse</a>
-                            </div>
+                            </div> -->
                         </form>
                     </div>
                 </div>
