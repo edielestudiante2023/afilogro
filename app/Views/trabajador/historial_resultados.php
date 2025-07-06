@@ -9,22 +9,25 @@
 </head>
 
 <body>
-    <div class="container py-4">
 
-        <?= $this->include('partials/nav') ?>
+    <?= $this->include('partials/nav') ?>
+
+    <div class="container py-4">
 
         <h1 class="h3 mb-4">Historial de Resultados de Indicadores</h1>
 
-        <a href="<?= base_url('trabajador/dashboard') ?>" class="btn btn-secondary">
+        <a href="<?= base_url('trabajador/dashboard') ?>" class="btn btn-secondary mb-3">
             ← Volver al Dashboard
         </a>
 
         <?php if (session()->getFlashdata('success')): ?>
             <div class="alert alert-success"><?= session()->getFlashdata('success') ?></div>
+        <?php elseif (session()->getFlashdata('error')): ?>
+            <div class="alert alert-danger"><?= session()->getFlashdata('error') ?></div>
         <?php endif; ?>
 
         <?php if (empty($historial)): ?>
-            <div class="alert alert-warning">No hay historial disponibles.</div>
+            <div class="alert alert-warning">No hay historial disponible.</div>
         <?php else: ?>
             <div class="table-responsive">
                 <table class="table table-bordered table-striped align-middle">
@@ -32,7 +35,7 @@
                         <tr>
                             <th>Indicador</th>
                             <th>Objetivo del Proceso</th>
-                            <th>Fórmula Larga</th>
+                            <th>Fórmula</th>
                             <th>Meta</th>
                             <th>Ponderación</th>
                             <th>Unidad</th>
@@ -47,7 +50,7 @@
                             <tr>
                                 <td><strong><?= esc($r['nombre']) ?></strong></td>
                                 <td class="small text-muted"><?= esc($r['objetivo_proceso']) ?></td>
-                                <td><code><?= esc($r['formula_larga']) ?></code></td>
+                                <td><code><?= esc($r['metodo_calculo']) ?></code></td>
                                 <td><?= esc($r['meta']) ?></td>
                                 <td><?= esc($r['ponderacion']) ?>%</td>
                                 <td><?= esc($r['unidad']) ?></td>
@@ -61,6 +64,7 @@
                 </table>
             </div>
         <?php endif; ?>
+
     </div>
 
     <?= $this->include('partials/logout') ?>

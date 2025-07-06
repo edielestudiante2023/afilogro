@@ -60,7 +60,7 @@ class TrabajadorController extends BaseController
                         ->where('periodo', $periodo)
                         ->findAll();
 
-        // Map de historial por id_indicador_perfil
+        // Creamos un map de historial por id_indicador_perfil
         $histMap = [];
         foreach ($history as $h) {
             $histMap[$h['id_indicador_perfil']] = $h;
@@ -75,7 +75,6 @@ class TrabajadorController extends BaseController
 
     /**
      * Guarda los resultados de indicadores del trabajador
-     * (Siempre inserta un nuevo registro en el historial)
      */
     public function saveIndicadores()
     {
@@ -83,6 +82,14 @@ class TrabajadorController extends BaseController
         $userId  = $session->get('id_users');
         $periodo = date('Y-m');
         $post    = $this->request->getPost();
+
+        // Evitar doble registro en el mismo periodo
+        if ($this->histModel->where('id_usuario', $userId)
+                            ->where('periodo', $periodo)
+                            ->first()) {
+            return redirect()->to('/trabajador/misIndicadores')
+                             ->with('error', 'Ya has registrado los resultados de este periodo.');
+        }
 
         foreach ($post['resultado_real'] as $ipId => $valor) {
             $this->histModel->insert([
@@ -96,7 +103,28 @@ class TrabajadorController extends BaseController
         }
 
         return redirect()->to('/trabajador/historialResultados')
-                         ->with('success', 'Resultados guardados en el historial.');
+                         ->with('success', 'Resultados guardados.');
+    }
+
+    /**
+     * Historial simple (puede usarse o eliminarse si no la necesitas)
+     */
+    public function historial()
+    {
+        $session = session();
+        $userId  = $session->get('id_users');
+
+        $registros = $this->histModel
+            ->select('historial_indicadores.*, indicadores.nombre AS indicador')
+            ->join('indicadores_perfil', 'indicadores_perfil.id_indicador_perfil = historial_indicadores.id_indicador_perfil')
+            ->join('indicadores', 'indicadores.id_indicador = indicadores_perfil.id_indicador')
+            ->where('historial_indicadores.id_usuario', $userId)
+            ->orderBy('fecha_registro', 'DESC')
+            ->findAll();
+
+        return view('trabajador/historial_resultados', [
+            'historial' => $registros
+        ]);
     }
 
     /**

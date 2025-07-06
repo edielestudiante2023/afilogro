@@ -29,8 +29,8 @@
                 <tr>
                     <th>Indicador</th>
                     <th>Objetivo del Proceso</th>
-                    <th>Fórmula Larga</th>
-                    <th>Variables</th>
+                    <th>Fórmula</th>
+                    
                     <th>Unidad</th>
                     <th>Periodicidad</th>
                     <th>Meta</th>
@@ -43,13 +43,13 @@
                 <?php foreach ($items as $i): 
                     $valor      = $histMap[$i['id_indicador_perfil']]['resultado_real'] ?? '';
                     $comentario = $histMap[$i['id_indicador_perfil']]['comentario']     ?? '';
-                    $disabled   = $yaReportado ? 'disabled' : '';
+                    
                 ?>
                     <tr>
                         <td><strong><?= esc($i['nombre']) ?></strong></td>
                         <td class="small text-muted"><?= esc($i['objetivo_proceso']) ?></td>
-                        <td><code><?= esc($i['formula_larga']) ?></code></td>
-                        <td><?= esc($i['variables']) ?></td>
+                        <td><code><?= esc($i['metodo_calculo']) ?></code></td>
+
                         <td><?= esc($i['unidad']) ?></td>
                         <td><?= esc($i['periodicidad']) ?></td>
                         <td><?= esc($i['meta']) ?></td>
@@ -60,14 +60,16 @@
                                 name="resultado_real[<?= $i['id_indicador_perfil'] ?>]"
                                 value="<?= esc($valor) ?>"
                                 class="form-control"
-                                <?= $disabled ?>>
+                                
                         </td>
                         <td>
-                            <textarea
-                                name="comentario[<?= $i['id_indicador_perfil'] ?>]"
+                            <textarea 
+                            name="comentario[<?= $i['id_indicador_perfil'] ?>]"
                                 class="form-control"
                                 rows="1"
-                                <?= $disabled ?>><?= esc($comentario) ?></textarea>
+                            ></textarea>
+                                
+                                
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -75,20 +77,18 @@
             </table>
         </div>
 
-        <?php if (! $yaReportado): ?>
+       
             <div class="d-flex justify-content-end">
                 <button type="submit" class="btn btn-primary">Guardar Resultados</button>
             </div>
-        <?php else: ?>
-            <div class="alert alert-info">
-                Ya registraste tus resultados para este periodo. Para modificarlos, usa el enlace de historial.
-            </div>
+        
+            
             <div class="text-end">
                 <a href="<?= base_url('jefatura/historialmisindicadoresfeje') ?>" class="btn btn-secondary">
                     Ver mi Historial
                 </a>
             </div>
-        <?php endif; ?>
+       
     </form>
 
     <div class="mt-4">

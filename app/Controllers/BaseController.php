@@ -54,5 +54,20 @@ abstract class BaseController extends Controller
         // Preload any models, libraries, etc, here.
 
         // E.g.: $this->session = service('session');
+        $session = service('session');
+
+        // Definir timeout en segundos (ej. 30 minutos)
+        $timeout = 30 * 60;
+
+        // Si existe la última actividad y ya expiró:
+        if ($session->has('last_activity') && (time() - $session->get('last_activity') > $timeout)) {
+            $session->destroy();
+            // Redirigir al login
+            header('Location: ' . site_url('/login'));
+            exit;
+        }
+
+        // Actualizar timestamp de actividad
+        $session->set('last_activity', time());
     }
 }

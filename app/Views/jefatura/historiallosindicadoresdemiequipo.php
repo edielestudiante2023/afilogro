@@ -47,7 +47,7 @@
                             <tr>
                                 <td><?= esc($r['nombre_completo']) ?></td>
                                 <td><?= esc($r['nombre_indicador']) ?></td>
-                                <td><code><?= esc($r['formula_larga']) ?></code></td>
+                                <td><code><?= esc($r['metodo_calculo']) ?></code></td>
                                 <td><?= esc($r['resultado_real']) ?></td>
                                 <td><?= esc($r['comentario']) ?: '—' ?></td>
                                 <td><?= esc($r['fecha_registro']) ?></td>

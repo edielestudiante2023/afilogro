@@ -6,17 +6,17 @@ use CodeIgniter\Model;
 
 class IndicadorAreaModel extends Model
 {
-    protected $table            = 'indicadores_area';
-    protected $primaryKey       = 'id_indicador_area';
-    protected $allowedFields    = [
+    protected $table         = 'indicadores_area';
+    protected $primaryKey    = 'id_indicador_area';
+    protected $allowedFields = [
         'id_indicador',
         'id_areas',
         'meta',
         'ponderacion',
         'periodicidad'
     ];
-    protected $returnType       = 'array';
-    public    $useTimestamps    = false;
+    protected $returnType    = 'array';
+    public    $useTimestamps = false;
 
     /**
      * Obtener todos los indicadores asociados a un área específica
@@ -25,10 +25,8 @@ class IndicadorAreaModel extends Model
     {
         return $this->select('
                 indicadores_area.*,
-                indicadores.nombre AS nombre_indicador,
-                indicadores.formula,
-                indicadores.formula_larga,
-                indicadores.variables,
+                indicadores.nombre         AS nombre_indicador,
+                indicadores.metodo_calculo,
                 indicadores.unidad,
                 indicadores.objetivo_proceso,
                 indicadores.objetivo_calidad
@@ -45,7 +43,7 @@ class IndicadorAreaModel extends Model
     {
         return $this->select('
                 indicadores_area.*,
-                indicadores.nombre AS nombre_indicador,
+                indicadores.nombre     AS nombre_indicador,
                 areas.nombre_area
             ')
             ->join('indicadores', 'indicadores.id_indicador = indicadores_area.id_indicador')

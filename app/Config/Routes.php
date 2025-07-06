@@ -126,3 +126,33 @@ $routes->post('jefatura/saveIndicadoresComoJefe', 'JefaturaController::saveIndic
 $routes->get('admin/admindashboard', 'AdminController::admindashboard');
 
 
+$routes->get('partesformula/list', 'PartesFormulaController::listPartesFormulaModel');
+$routes->get('partesformula/add', 'PartesFormulaController::addPartesFormulaModel');
+$routes->post('partesformula/addpost', 'PartesFormulaController::addPartesFormulaModelPost');
+$routes->get('partesformula/edit/(:num)', 'PartesFormulaController::editPartesFormulaModel/$1');
+$routes->post('partesformula/editpost/(:num)', 'PartesFormulaController::editPartesFormulaModelPost/$1');
+$routes->get('partesformula/delete/(:num)', 'PartesFormulaController::deletePartesFormulaModel/$1');
+
+$routes->get('partesformula/upload', 'PartesFormulaController::uploadCSVForm');
+$routes->post('partesformula/upload', 'PartesFormulaController::uploadCSVPost');
+
+// Mostrar formulario para diligenciar
+$routes->get('indicadores/fill/(:num)', 'IndicadorController::fillIndicador/$1');
+// Procesar el envío y mostrar el resultado
+$routes->post('indicadores/fill/(:num)', 'IndicadorController::fillIndicadorPost/$1');
+
+// app/Config/Routes.php
+$routes->group('trabajador', ['namespace' => 'App\Controllers'], function($routes) {
+    // Dashboard
+    $routes->get('dashboard',             'TrabajadorController::dashboard');
+    // Listar indicadores (misIndicadores)
+    $routes->get('misIndicadores',        'TrabajadorController::misIndicadores');
+    // Guardar indicadores (saveIndicadores)
+    $routes->post('saveIndicadores',      'TrabajadorController::saveIndicadores');
+    // Historial simple (opcional)
+    $routes->get('historial',             'TrabajadorController::historial');
+    // Historial detallado
+    $routes->get('historialResultados',   'TrabajadorController::historialResultados');
+});
+
+

@@ -30,8 +30,8 @@ class JefaturaController extends BaseController
 
     public function jefaturadashboard()
     {
-        $session     = session();
-        $jefeId      = $session->get('id_users');
+        $session      = session();
+        $jefeId       = $session->get('id_users');
         $subordinados = $this->userModel->getSubordinadosDeJefe($jefeId);
 
         return view('jefatura/jefaturadashboard', [
@@ -46,55 +46,59 @@ class JefaturaController extends BaseController
         $user    = $this->userModel->find($userId);
         $perfil  = $user['id_perfil_cargo'];
 
-        $items = $this->ipModel->getIndicadoresPorPerfil($perfil);
+        // Obtener indicadores asociados al perfil de cargo del jefe
+        $items   = $this->ipModel->getIndicadoresPorPerfil($perfil);
         $periodo = date('Y-m');
 
+        // Obtener historial del periodo actual para pre-cargar valores ya registrados (si existen)
         $history = $this->histModel
             ->where('id_usuario', $userId)
             ->where('periodo', $periodo)
             ->findAll();
 
+        // Mapear histórico por id_indicador_perfil para fácil acceso en la vista
         $histMap = [];
         foreach ($history as $h) {
             $histMap[$h['id_indicador_perfil']] = $h;
         }
 
-        $yaReportado = !empty($history);
-
         return view('jefatura/misindicadorescomojefe', [
-            'items'        => $items,
-            'histMap'      => $histMap,
-            'periodo'      => $periodo,
-            'yaReportado'  => $yaReportado
+            'items'   => $items,
+            'histMap' => $histMap,
+            'periodo' => $periodo
+            // 'yaReportado' se eliminó para permitir múltiples actualizaciones en el periodo
         ]);
     }
-
 
     public function losIndicadoresDeMiEquipo()
     {
         $jefeId  = session()->get('id_users');
         $periodo = $this->request->getGet('periodo') ?? date('Y-m');
 
-
+        // Obtener IDs de subordinados de este jefe
         $subsIds = array_column(
             $this->userModel->getSubordinadosDeJefe($jefeId),
             'id_users'
         );
 
+        // Consultar indicadores reportados por el equipo en el periodo seleccionado
         $equipo = $this->histModel
             ->select('
-            historial_indicadores.*,
-            indicadores.nombre          AS nombre_indicador,
-            indicadores.formula_larga   AS formula_larga,
-            indicadores_perfil.periodicidad,
-            indicadores_perfil.meta,
-            historial_indicadores.resultado_real,
-            historial_indicadores.comentario,
-            users.nombre_completo       AS nombre_completo
-        ')
+                historial_indicadores.*,
+                indicadores.nombre           AS nombre_indicador,
+                indicadores.periodicidad     AS periodicidad,
+                indicadores.meta_valor       AS meta,
+                indicadores.ponderacion      AS ponderacion,
+                indicadores.unidad           AS unidad,
+                indicadores.objetivo_proceso AS objetivo_proceso,
+                historial_indicadores.resultado_real,
+                historial_indicadores.comentario,
+                
+                users.nombre_completo        AS nombre_completo
+            ')
             ->join('indicadores_perfil', 'indicadores_perfil.id_indicador_perfil = historial_indicadores.id_indicador_perfil')
-            ->join('indicadores',        'indicadores.id_indicador          = indicadores_perfil.id_indicador')
-            ->join('users',              'users.id_users                    = historial_indicadores.id_usuario')
+            ->join('indicadores', 'indicadores.id_indicador = indicadores_perfil.id_indicador')
+            ->join('users', 'users.id_users = historial_indicadores.id_usuario')
             ->whereIn('historial_indicadores.id_usuario', $subsIds)
             ->where('historial_indicadores.periodo', $periodo)
             ->orderBy('historial_indicadores.fecha_registro', 'DESC')
@@ -108,72 +112,80 @@ class JefaturaController extends BaseController
 
     public function historialMisIndicadoresFeje()
     {
-        $session = session();
-        $userId  = $session->get('id_users');
+        $userId = session()->get('id_users');
 
+        // Historial completo de indicadores de la jefatura (todos los periodos)
         $historial = $this->histModel
             ->select('
                 historial_indicadores.*,
-                indicadores.nombre,
-                indicadores.formula,
-                indicadores.formula_larga,
-                indicadores.objetivo_proceso,
-                indicadores_perfil.meta,
-                indicadores_perfil.ponderacion,
-                indicadores.unidad
+                indicadores.nombre           AS nombre_indicador,
+                indicadores.periodicidad     AS periodicidad,
+                indicadores.meta_valor       AS meta,
+                indicadores.ponderacion      AS ponderacion,
+                indicadores.unidad           AS unidad,
+                indicadores.objetivo_proceso AS objetivo_proceso
             ')
             ->join('indicadores_perfil', 'indicadores_perfil.id_indicador_perfil = historial_indicadores.id_indicador_perfil')
             ->join('indicadores', 'indicadores.id_indicador = indicadores_perfil.id_indicador')
             ->where('historial_indicadores.id_usuario', $userId)
-            ->orderBy('fecha_registro', 'DESC')
-            ->findAll();
-
-        return view('jefatura/historialmisindicadoresfeje', ['historial' => $historial]);
-    }
-
-
-    public function historialLosIndicadoresDeMiEquipo()
-    {
-        $jefeId  = session()->get('id_users');
-        $periodo = $this->request->getGet('periodo') ?? date('Y-m');
-
-
-        $subIds = array_column(
-            $this->userModel->getSubordinadosDeJefe($jefeId),
-            'id_users'
-        );
-
-        $equipo = $this->histModel
-            ->select('
-            historial_indicadores.*,
-            usuarios.nombre_completo   AS nombre_completo,
-            indicadores.nombre         AS nombre_indicador,
-            indicadores.formula_larga  AS formula_larga,
-            indicadores_perfil.periodicidad,
-            indicadores_perfil.meta,
-            historial_indicadores.resultado_real,
-            historial_indicadores.comentario,
-            historial_indicadores.fecha_registro
-        ')
-            ->join('indicadores_perfil', 'indicadores_perfil.id_indicador_perfil = historial_indicadores.id_indicador_perfil')
-            ->join('indicadores', 'indicadores.id_indicador = indicadores_perfil.id_indicador')
-            ->join('users AS usuarios', 'usuarios.id_users = historial_indicadores.id_usuario')
-            ->whereIn('historial_indicadores.id_usuario', $subIds)
-            ->where('historial_indicadores.periodo', $periodo)
             ->orderBy('historial_indicadores.fecha_registro', 'DESC')
             ->findAll();
 
-        return view('jefatura/historiallosindicadoresdemiequipo', [
-            'equipo'  => $equipo,
-            'periodo' => $periodo,
+        return view('jefatura/historialmisindicadoresfeje', [
+            'historial' => $historial
         ]);
     }
+
+public function historialLosIndicadoresDeMiEquipo()
+{
+    $jefeId  = session()->get('id_users');
+    $periodo = $this->request->getGet('periodo') ?? date('Y-m');
+
+    $subIds = array_column(
+        $this->userModel->getSubordinadosDeJefe($jefeId),
+        'id_users'
+    );
+
+    // Obtén el Query Builder
+    $builder = $this->histModel->builder();
+
+    // Arma y ejecuta la consulta
+    $equipo = $builder
+        ->select('
+            historial_indicadores.*,
+            usuarios.nombre_completo      AS nombre_completo,
+            indicadores.nombre            AS nombre_indicador,
+            indicadores.periodicidad      AS periodicidad,
+            indicadores.meta_valor        AS meta,
+            indicadores.ponderacion       AS ponderacion,
+            historial_indicadores.resultado_real,
+            historial_indicadores.comentario,
+            indicadores.metodo_calculo,
+            historial_indicadores.fecha_registro
+        ')
+        ->join('indicadores_perfil', 'indicadores_perfil.id_indicador_perfil = historial_indicadores.id_indicador_perfil')
+        ->join('indicadores',         'indicadores.id_indicador = indicadores_perfil.id_indicador')
+        ->join('users AS usuarios',   'usuarios.id_users = historial_indicadores.id_usuario')
+        ->whereIn('historial_indicadores.id_usuario', $subIds)
+        ->where('historial_indicadores.periodo', $periodo)
+        ->orderBy('historial_indicadores.fecha_registro', 'DESC')
+        ->get()
+        ->getResultArray();
+
+    // Devuelve la vista con los datos
+    return view('jefatura/historiallosindicadoresdemiequipo', [
+        'equipo'  => $equipo,
+        'periodo' => $periodo,
+    ]);
+}
+
 
     public function guardarEquipoIndicador($idHistorial)
     {
         helper('form');
         $post = $this->request->getPost();
 
+        // Validar datos del formulario
         if (! $this->validate([
             'resultado_real' => 'required|decimal',
             'comentario'     => 'permit_empty',
@@ -181,6 +193,7 @@ class JefaturaController extends BaseController
             return redirect()->back()->with('errors', $this->validator->getErrors());
         }
 
+        // Obtener el registro antiguo antes de actualizar (para auditoría)
         $old = $this->histModel->find($idHistorial);
 
         $nuevosDatos = [
@@ -188,8 +201,10 @@ class JefaturaController extends BaseController
             'comentario'     => $post['comentario'],
         ];
 
+        // Actualizar el registro del indicador del equipo
         $this->histModel->update($idHistorial, $nuevosDatos);
 
+        // Registrar el cambio en la auditoría (solo del campo resultado_real)
         $auditModel = new IndicadorAuditoriaModel();
         $userId     = session()->get('id_users');
         $auditModel->insert([
@@ -206,60 +221,38 @@ class JefaturaController extends BaseController
     public function saveIndicadoresComoJefe()
     {
         $post    = $this->request->getPost();
+        $session = session();
+        $userId  = $session->get('id_users');      // El jefe mismo
         $periodo = date('Y-m');
 
-        foreach ($post['resultado_real'] as $clave => $valor) {
-
-            // La clave ahora es "id_indicador_perfil_id_usuario"
-            [$ipId, $idUsuario] = explode('_', $clave);
-
+        foreach ($post['resultado_real'] as $ipId => $valor) {
+            // Prepara datos del registro
             $registroExistente = $this->histModel
                 ->where('id_indicador_perfil', $ipId)
-                ->where('id_usuario', $idUsuario)
+                ->where('id_usuario', $userId)
                 ->where('periodo', $periodo)
                 ->first();
 
             $data = [
                 'id_indicador_perfil' => $ipId,
-                'id_usuario'          => $idUsuario,
+                'id_usuario'          => $userId,
                 'periodo'             => $periodo,
                 'valores_json'        => json_encode(['valor' => $valor]),
                 'resultado_real'      => $valor,
-                'comentario'          => $post['comentario'][$clave] ?? null,
-                'fecha_registro'      => date('Y-m-d H:i:s')
+                'comentario'          => $post['comentario'][$ipId] ?? null,
+                'fecha_registro'      => date('Y-m-d H:i:s'),
             ];
 
             if ($registroExistente) {
-                $cambio = false;
-
-                // Verifica si hubo cambio
-                if (
-                    $registroExistente['resultado_real'] != $valor ||
-                    $registroExistente['comentario'] != ($post['comentario'][$clave] ?? null)
-                ) {
-                    $cambio = true;
-                }
-
+                // Actualiza si ya existía
                 $this->histModel->update($registroExistente['id_historial'], $data);
-
-                if ($cambio) {
-                    $auditoriaModel = new IndicadorAuditoriaModel();
-                    $auditoriaModel->insert([
-                        'id_historial'    => $registroExistente['id_historial'],
-                        'editor_id'       => session()->get('id_users'),
-                        'campo'           => 'resultado_real',
-                        'valor_anterior'  => $registroExistente['resultado_real'],
-                        'valor_nuevo'     => $valor,
-                    ]);
-                }
             } else {
-
+                // Inserta nuevo registro
                 $this->histModel->insertarSinDuplicar($data);
             }
         }
 
-
         return redirect()->to('/jefatura/historiallosindicadoresdemiequipo')
-            ->with('success', 'Indicadores del equipo actualizados correctamente.');
+            ->with('success', 'Tus indicadores fueron guardados correctamente.');
     }
 }

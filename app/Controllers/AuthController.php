@@ -31,8 +31,13 @@ class AuthController extends BaseController
                     'nombre_completo' => $usuario['nombre_completo'],
                     'correo' => $usuario['correo'],
                     'id_roles' => $usuario['id_roles'],
+                    'id_perfil_cargo' => $usuario['id_perfil_cargo'],
+
                     'logged_in' => true
                 ];
+
+
+
                 $session->set($sessionData);
 
                 // Redirigir según rol
