@@ -9,15 +9,17 @@ class IndicadorModel extends Model
     protected $primaryKey       = 'id_indicador';
     protected $allowedFields    = [
         'nombre',
-        'formula',
         'periodicidad',
         'ponderacion',
-        'meta',
-        'variables',
+        'meta_valor',
+        'meta_descripcion',
+        'tipo_meta',
+        'metodo_calculo',
+        'activo',
         'unidad',
         'objetivo_proceso',
         'objetivo_calidad',
-        'formula_larga',
+        'tipo_aplicacion',
         'created_at'
     ];
     protected $returnType       = 'array';

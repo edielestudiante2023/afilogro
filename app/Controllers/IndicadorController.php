@@ -1,4 +1,6 @@
-<?php namespace App\Controllers;
+<?php
+
+namespace App\Controllers;
 
 use App\Models\IndicadorModel;
 use App\Models\PartesFormulaModel;
@@ -9,7 +11,6 @@ use CodeIgniter\Exceptions\PageNotFoundException;
 
 class IndicadorController extends BaseController
 {
-    /** @var IndicadorModel */
     protected $indicadorModel;
 
     public function initController(
@@ -22,12 +23,11 @@ class IndicadorController extends BaseController
         $this->indicadorModel = new IndicadorModel();
     }
 
-    // Listar indicadores
     public function listIndicador()
     {
         $indicadores = $this->indicadorModel->orderBy('created_at', 'DESC')->findAll();
 
-        // Renderizar fórmula desde partes_formula_indicador
+        // Cargar la fórmula desglosada
         $formulaModel = new PartesFormulaModel();
         foreach ($indicadores as &$i) {
             $i['formula_renderizada'] = $formulaModel->getFormulaComoTexto($i['id_indicador']);
@@ -36,20 +36,21 @@ class IndicadorController extends BaseController
         return view('management/list_indicador', ['indicadores' => $indicadores]);
     }
 
-    // Formulario crear indicador
     public function addIndicador()
     {
         return view('management/add_indicador');
     }
 
-    // Procesar creación indicador
     public function addIndicadorPost()
     {
         $rules = [
             'nombre'             => 'required',
             'periodicidad'       => 'required',
-            'ponderacion'        => 'required',
-            'meta'               => 'required',
+            'ponderacion'        => 'required|numeric',
+            'meta_valor'         => 'required',
+            'meta_descripcion'   => 'required',
+            'tipo_meta'          => 'required',
+            'metodo_calculo'     => 'required',
             'unidad'             => 'required',
             'objetivo_proceso'   => 'required',
             'objetivo_calidad'   => 'required',
@@ -58,33 +59,43 @@ class IndicadorController extends BaseController
 
         if (! $this->validate($rules)) {
             return redirect()->back()
-                             ->with('errors', $this->validator->getErrors())
-                             ->withInput();
+                ->with('errors', $this->validator->getErrors())
+                ->withInput();
         }
 
         $data = $this->request->getPost();
         $this->indicadorModel->insert($data);
+        $newId = $this->indicadorModel->getInsertID();
+
+        // Si presionó “guardar y diseñar”, lo enviamos al constructor de partes
+        if ($this->request->getPost('accion') === 'guardar_disenar') {
+            return redirect()->to('/partesformula/add?id_indicador=' . $newId)
+                ->with('success', 'Indicador creado. Ahora construye la fórmula.');
+        }
+
         return redirect()->to('/indicadores')->with('success', 'Indicador creado.');
     }
 
-    // Formulario editar indicador
     public function editIndicador($id)
     {
         $indicador = $this->indicadorModel->find($id);
         if (! $indicador) {
             throw new PageNotFoundException("Indicador con ID $id no existe");
         }
+
         return view('management/edit_indicador', ['indicador' => $indicador]);
     }
 
-    // Procesar edición indicador
     public function editIndicadorPost($id)
     {
         $rules = [
             'nombre'             => 'required',
             'periodicidad'       => 'required',
-            'ponderacion'        => 'required',
-            'meta'               => 'required',
+            'ponderacion'        => 'required|numeric',
+            'meta_valor'         => 'required',
+            'meta_descripcion'   => 'required',
+            'tipo_meta'          => 'required',
+            'metodo_calculo'     => 'required',
             'unidad'             => 'required',
             'objetivo_proceso'   => 'required',
             'objetivo_calidad'   => 'required',
@@ -93,8 +104,8 @@ class IndicadorController extends BaseController
 
         if (! $this->validate($rules)) {
             return redirect()->back()
-                             ->with('errors', $this->validator->getErrors())
-                             ->withInput();
+                ->with('errors', $this->validator->getErrors())
+                ->withInput();
         }
 
         $data = $this->request->getPost();
@@ -102,14 +113,12 @@ class IndicadorController extends BaseController
         return redirect()->to('/indicadores')->with('success', 'Indicador actualizado.');
     }
 
-    // Eliminar indicador
     public function deleteIndicador($id)
     {
         $this->indicadorModel->delete($id);
         return redirect()->to('/indicadores')->with('success', 'Indicador eliminado.');
     }
 
-    // 1. Mostrar formulario de diligenciamiento
     public function fillIndicador($id)
     {
         $indicador = $this->indicadorModel->find($id);
@@ -124,35 +133,28 @@ class IndicadorController extends BaseController
         ]);
     }
 
-    // 2. Recibir datos, armar y evaluar
-  public function fillIndicadorPost($id)
-{
-    // Carga las partes de la fórmula para el indicador
-    $partesModel = new PartesFormulaModel();
-    $partes      = $partesModel->getPartesPorIndicador($id);
-    $inputs      = $this->request->getPost('dato'); // e.g. ['VENTAS_ACTUAL' => 100, …]
+    public function fillIndicadorPost($id)
+    {
+        $partesModel = new PartesFormulaModel();
+        $partes      = $partesModel->getPartesPorIndicador($id);
+        $inputs      = $this->request->getPost('dato');
 
-    // Construir la expresión matemática sustituyendo cada 'dato' por su valor
-    $formula = '';
-    foreach ($partes as $p) {
-        if ($p['tipo_parte'] === 'dato') {
-            // Toma el valor ingresado (o 0 si no existe)
-            $val = isset($inputs[$p['valor']]) ? floatval($inputs[$p['valor']]) : 0;
-            $formula .= " {$val}";
-        } else {
-            $formula .= " {$p['valor']}";
+        $formula = '';
+        foreach ($partes as $p) {
+            if ($p['tipo_parte'] === 'dato') {
+                $val = isset($inputs[$p['valor']]) ? floatval($inputs[$p['valor']]) : 0;
+                $formula .= " {$val}";
+            } else {
+                $formula .= " {$p['valor']}";
+            }
         }
+
+        $resultado = eval("return {$formula};");
+
+        return view('management/fill_result', [
+            'indicador' => $this->indicadorModel->find($id),
+            'formula'   => $formula,
+            'resultado' => $resultado,
+        ]);
     }
-
-    // Evaluar la expresión y devolver el resultado
-    $resultado = eval("return {$formula};");
-
-    // Renderizar la vista con el indicador, la fórmula evaluada y el resultado
-    return view('management/fill_result', [
-        'indicador' => $this->indicadorModel->find($id),
-        'formula'   => $formula,
-        'resultado' => $resultado,
-    ]);
-}
-
 }

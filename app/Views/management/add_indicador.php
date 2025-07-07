@@ -1,83 +1,125 @@
+<!-- app/Views/management/add_indicador.php -->
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crear Indicador – Afilogro</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body>
-<?= $this->include('partials/nav') ?>
+    <?= $this->include('partials/nav') ?>
 
-<div class="container py-4">
-    <h1 class="h3 mb-4">Crear Nuevo Indicador</h1>
+    <div class="container py-4">
+        <h1 class="h3 mb-4">Crear Nuevo Indicador</h1>
 
-    <?php if (session()->getFlashdata('errors')): ?>
-        <div class="alert alert-danger">
-            <?php foreach (session()->getFlashdata('errors') as $e): ?>
-                <p><?= esc($e) ?></p>
-            <?php endforeach; ?>
-        </div>
-    <?php endif; ?>
+        <?php if (session()->getFlashdata('errors')): ?>
+            <div class="alert alert-danger">
+                <?php foreach (session()->getFlashdata('errors') as $e): ?>
+                    <p><?= esc($e) ?></p>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
 
-    <form action="<?= base_url('indicadores/add') ?>" method="post">
-        <?= csrf_field() ?>
+        <form action="<?= base_url('indicadores/add') ?>" method="post">
+            <?= csrf_field() ?>
 
-        <div class="mb-3">
-            <label class="form-label">Nombre</label>
-            <input type="text" name="nombre" class="form-control" value="<?= old('nombre') ?>" required>
-        </div>
+            <!-- Nombre -->
+            <div class="mb-3">
+                <label class="form-label">Nombre</label>
+                <input type="text" name="nombre" class="form-control" value="<?= old('nombre') ?>" required>
+            </div>
 
-        <div class="mb-3">
-            <label class="form-label">Fórmula corta (sintética)</label>
-            <input type="text" name="formula" class="form-control" value="<?= old('formula') ?>" required>
-        </div>
+            <!-- Periodicidad -->
+            <div class="mb-3">
+                <label class="form-label">Periodicidad</label>
+                <input type="text" name="periodicidad" class="form-control" value="<?= old('periodicidad') ?>" required>
+            </div>
 
-        <div class="mb-3">
-            <label class="form-label">Fórmula larga (explicativa)</label>
-            <textarea name="formula_larga" class="form-control" rows="3"><?= old('formula_larga') ?></textarea>
-        </div>
+            <!-- Ponderación -->
+            <div class="mb-3">
+                <label class="form-label">Ponderación (%)</label>
+                <input type="number" name="ponderacion" class="form-control" min="0" max="100"
+                    value="<?= old('ponderacion') ?>" required>
+            </div>
 
-        <div class="mb-3">
-            <label class="form-label">Variables (separadas por comas)</label>
-            <input type="text" name="variables" class="form-control" value="<?= old('variables') ?>" required>
-        </div>
+            <!-- Meta Valor -->
+            <div class="mb-3">
+                <label class="form-label">Meta Valor</label>
+                <input type="text" name="meta_valor" class="form-control" value="<?= old('meta_valor') ?>" required>
+            </div>
 
-        <div class="mb-3">
-            <label class="form-label">Unidad</label>
-            <input type="text" name="unidad" class="form-control" value="<?= old('unidad') ?>" required>
-        </div>
+            <!-- Meta Descripción -->
+            <div class="mb-3">
+                <label class="form-label">Meta Descripción</label>
+                <textarea name="meta_descripcion" class="form-control" rows="2" required><?= old('meta_descripcion') ?></textarea>
+            </div>
 
-        <div class="mb-3">
-            <label class="form-label">Periodicidad</label>
-            <input type="text" name="periodicidad" class="form-control" value="<?= old('periodicidad') ?>" required>
-        </div>
+            <!-- Tipo de Meta -->
+            <div class="mb-3">
+                <label class="form-label">Tipo de Meta</label>
+                <select name="tipo_meta" class="form-select" required>
+                    <option value="">-- Seleccione --</option>
+                    <option value="fija" <?= old('tipo_meta') == 'fija' ? 'selected' : '' ?>>Fija</option>
+                    <option value="comparativa" <?= old('tipo_meta') == 'comparativa' ? 'selected' : '' ?>>Comparativa</option>
+                </select>
+            </div>
 
-        <div class="mb-3">
-            <label class="form-label">Meta</label>
-            <input type="text" name="meta" class="form-control" value="<?= old('meta') ?>" required>
-        </div>
+            <!-- Método de Cálculo -->
+            <div class="mb-3">
+                <label class="form-label">Método de Cálculo</label>
+                <select name="metodo_calculo" class="form-select" required>
+                    <option value="">-- Seleccione --</option>
+                    <option value="formula" <?= old('metodo_calculo') == 'formula' ? 'selected' : '' ?>>Fórmula</option>
+                    <option value="manual" <?= old('metodo_calculo') == 'manual' ? 'selected' : '' ?>>Manual</option>
+                    <option value="semiautomatico" <?= old('metodo_calculo') == 'semiautomatico' ? 'selected' : '' ?>>Semiautomático</option>
+                </select>
+            </div>
 
-        <div class="mb-3">
-            <label class="form-label">Ponderación (%)</label>
-            <input type="number" name="ponderacion" class="form-control" value="<?= old('ponderacion') ?>" min="0" max="100" required>
-        </div>
+            <!-- Unidad -->
+            <div class="mb-3">
+                <label class="form-label">Unidad</label>
+                <input type="text" name="unidad" class="form-control" value="<?= old('unidad') ?>" required>
+            </div>
 
-        <div class="mb-3">
-            <label class="form-label">Objetivo de Proceso</label>
-            <textarea name="objetivo_proceso" class="form-control" rows="3" required><?= old('objetivo_proceso') ?></textarea>
-        </div>
+            <!-- Objetivo de Proceso -->
+            <div class="mb-3">
+                <label class="form-label">Objetivo de Proceso</label>
+                <textarea name="objetivo_proceso" class="form-control" rows="3" required><?= old('objetivo_proceso') ?></textarea>
+            </div>
 
-        <div class="mb-3">
-            <label class="form-label">Objetivo de Calidad que Impacta</label>
-            <input type="text" name="objetivo_calidad" class="form-control" value="<?= old('objetivo_calidad') ?>" required>
-        </div>
+            <!-- Objetivo de Calidad -->
+            <div class="mb-3">
+                <label class="form-label">Objetivo de Calidad que Impacta</label>
+                <input type="text" name="objetivo_calidad" class="form-control" value="<?= old('objetivo_calidad') ?>" required>
+            </div>
 
-        <button type="submit" class="btn btn-success">
-            <i class="bi bi-save me-1"></i> Guardar Indicador
-        </button>
-    </form>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+            <!-- Tipo de Aplicación -->
+            <div class="mb-3">
+                <label class="form-label">Aplica a</label>
+                <select name="tipo_aplicacion" class="form-select" required>
+                    <option value="">-- Seleccione --</option>
+                    <option value="cargo" <?= old('tipo_aplicacion') == 'cargo' ? 'selected' : '' ?>>Cargo</option>
+                    <option value="area" <?= old('tipo_aplicacion') == 'area' ? 'selected' : '' ?>>Área</option>
+                </select>
+            </div>
+
+            <!-- Al final de add_indicador.php, junto al botón Guardar -->
+
+
+
+
+
+            <button type="submit" name="accion" value="guardar_disenar" class="btn btn-success">
+                <i class="bi bi-gear me-1"></i> Guardar y Diseñar Fórmula
+            </button>
+
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

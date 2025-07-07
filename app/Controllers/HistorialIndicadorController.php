@@ -35,23 +35,55 @@ class HistorialIndicadorController extends BaseController
     public function listHistorialIndicador()
     {
         $data['records'] = $this->histModel
-            ->select('historial_indicadores.*, i.nombre AS indicador, p.nombre_cargo AS perfil, u.nombre_completo AS usuario')
+            ->select(
+                'historial_indicadores.*,' .
+                    'ip.id_indicador_perfil,' .
+                    'ip.id_indicador AS id_indicador_asignado,' .
+                    'i.id_indicador,' .
+                    'i.nombre AS indicador,' .
+                    'i.periodicidad,' .
+                    'i.ponderacion,' .
+                    'i.meta_valor,' .
+                    'i.meta_descripcion,' .
+                    'i.tipo_meta,' .
+                    'i.metodo_calculo,' .
+                    'i.unidad,' .
+                    'i.objetivo_proceso,' .
+                    'i.objetivo_calidad,' .
+                    'i.tipo_aplicacion,' .
+                    'p.nombre_cargo AS perfil,' .
+                    'u.nombre_completo AS usuario'
+            )
             ->join('indicadores_perfil ip', 'ip.id_indicador_perfil = historial_indicadores.id_indicador_perfil')
             ->join('indicadores i', 'i.id_indicador = ip.id_indicador')
             ->join('perfiles_cargo p', 'p.id_perfil_cargo = ip.id_perfil_cargo')
             ->join('users u', 'u.id_users = historial_indicadores.id_usuario')
-            ->orderBy('fecha_registro', 'DESC')
+            ->orderBy('historial_indicadores.fecha_registro', 'DESC')
             ->findAll();
+
         return view('management/list_historial_indicador', $data);
     }
+
 
     // Formulario crear registro
     public function addHistorialIndicador()
     {
         $data = [
-            'asignaciones' => $this->ipModel->findAll(),
+            'asignaciones' => $this->ipModel
+                ->select(
+                    'indicadores_perfil.id_indicador_perfil,' .
+                        'indicadores_perfil.id_indicador,' .
+                        'i.nombre AS nombre_indicador,' .
+                        'i.periodicidad,' .
+                        'i.ponderacion,' .
+                        'i.meta_valor,' .
+                        'i.meta_descripcion'
+                )
+                ->join('indicadores i', 'i.id_indicador = indicadores_perfil.id_indicador')
+                ->findAll(),
             'users'        => $this->userModel->where('activo', 1)->findAll()
         ];
+
         return view('management/add_historial_indicador', $data);
     }
 
@@ -71,27 +103,58 @@ class HistorialIndicadorController extends BaseController
                 ->with('errors', $this->validator->getErrors())
                 ->withInput();
         }
+
         $this->histModel->insert($this->request->getPost());
         return redirect()->to('/historial_indicador')->with('success', 'Registro creado.');
     }
 
     // Formulario editar
     public function editHistorialIndicador($id)
-    {
-        $record = $this->histModel->find($id);
-        if (! $record) throw new PageNotFoundException("Registro con ID $id no existe");
-        $data = [
-            'record'      => $record,
-            'asignaciones' => $this->ipModel
-                ->select('indicadores_perfil.id_indicador_perfil, indicadores.nombre AS nombre_indicador, perfiles_cargo.nombre_cargo')
-                ->join('indicadores', 'indicadores.id_indicador = indicadores_perfil.id_indicador')
-                ->join('perfiles_cargo', 'perfiles_cargo.id_perfil_cargo = indicadores_perfil.id_perfil_cargo')
-                ->findAll(),
+{
+    $record = $this->histModel
+        ->select(
+            'historial_indicadores.*,' .
+            'ip.id_indicador_perfil,' .
+            'ip.id_indicador AS id_indicador_asignado,' .
+            'i.id_indicador,' .
+            'i.nombre AS nombre_indicador,' .
+            'i.periodicidad,' .
+            'i.ponderacion,' .
+            'i.meta_valor,' .
+            'i.meta_descripcion,' .
+            'i.tipo_meta,' .
+            'i.metodo_calculo,' .
+            'i.unidad,' .
+            'i.objetivo_proceso,' .
+            'i.objetivo_calidad,' .
+            'i.tipo_aplicacion'
+        )
+        ->join('indicadores_perfil ip', 'ip.id_indicador_perfil = historial_indicadores.id_indicador_perfil')
+        ->join('indicadores i', 'i.id_indicador = ip.id_indicador')
+        ->where('historial_indicadores.id_historial', $id)
+        ->first();
 
-            'users'       => $this->userModel->where('activo', 1)->findAll()
-        ];
-        return view('management/edit_historial_indicador', $data);
-    }
+    if (! $record) throw new PageNotFoundException("Registro con ID $id no existe");
+
+    $data = [
+        'record'      => $record,
+        'asignaciones' => $this->ipModel
+            ->select(
+                'indicadores_perfil.id_indicador_perfil,' .
+                'indicadores_perfil.id_indicador,' .
+                'i.nombre AS nombre_indicador,' .
+                'i.periodicidad,' .
+                'i.ponderacion,' .
+                'i.meta_valor,' .
+                'i.meta_descripcion'
+            )
+            ->join('indicadores i', 'i.id_indicador = indicadores_perfil.id_indicador')
+            ->findAll(),
+        'users'       => $this->userModel->where('activo', 1)->findAll()
+    ];
+
+    return view('management/edit_historial_indicador', $data);
+}
 
     // Procesar edición
     public function editHistorialIndicadorPost($id)
@@ -109,6 +172,7 @@ class HistorialIndicadorController extends BaseController
                 ->with('errors', $this->validator->getErrors())
                 ->withInput();
         }
+
         $this->histModel->update($id, $this->request->getPost());
         return redirect()->to('/historial_indicador')->with('success', 'Registro actualizado.');
     }

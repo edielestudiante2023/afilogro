@@ -10,7 +10,7 @@ class PartesFormulaController extends Controller
 {
     public function listPartesFormulaModel()
     {
-        $model = new \App\Models\PartesFormulaModel();
+        $model = new PartesFormulaModel();
         $data['partes'] = $model
             ->select('partes_formula_indicador.*, indicadores.nombre AS nombre_indicador')
             ->join('indicadores', 'indicadores.id_indicador = partes_formula_indicador.id_indicador')
@@ -20,31 +20,59 @@ class PartesFormulaController extends Controller
         return view('management/list_partes_formula', $data);
     }
 
-
     public function addPartesFormulaModel()
     {
-        $indicadorModel = new \App\Models\IndicadorModel();
+        $indicadorModel = new IndicadorModel();
         $data['indicadores'] = $indicadorModel->orderBy('nombre', 'ASC')->findAll();
+
+        // Si viene un ID desde la URL, cargar partes existentes para mostrar vista previa
+        $idIndicador = $this->request->getGet('id_indicador');
+        if ($idIndicador) {
+            $partesModel = new PartesFormulaModel();
+            $data['formula_actual'] = $partesModel
+                ->where('id_indicador', $idIndicador)
+                ->orderBy('orden', 'ASC')
+                ->findAll();
+            $data['id_indicador_seleccionado'] = $idIndicador;
+        } else {
+            $data['formula_actual'] = [];
+            $data['id_indicador_seleccionado'] = null;
+        }
+
         return view('management/add_partes_formula', $data);
     }
+
+    public function getNextOrden($idIndicador)
+{
+    $model = new PartesFormulaModel();
+    $count = $model
+        ->where('id_indicador', $idIndicador)
+        ->countAllResults();
+
+    return $this->response->setJSON(['next_orden' => $count + 1]);
+}
 
 
     public function addPartesFormulaModelPost()
     {
         $model = new PartesFormulaModel();
+        $idIndicador = $this->request->getPost('id_indicador');
+
         $model->insert([
-            'id_indicador' => $this->request->getPost('id_indicador'),
+            'id_indicador' => $idIndicador,
             'tipo_parte'   => $this->request->getPost('tipo_parte'),
             'valor'        => $this->request->getPost('valor'),
             'orden'        => $this->request->getPost('orden'),
         ]);
-        return redirect()->to(site_url('partesformula/list'));
+
+        return redirect()->to(site_url('partesformula/add?id_indicador=' . $idIndicador))
+                         ->with('success', 'Parte agregada. Puedes seguir construyendo la fórmula.');
     }
 
     public function editPartesFormulaModel($id)
     {
-        $model = new \App\Models\PartesFormulaModel();
-        $indicadorModel = new \App\Models\IndicadorModel();
+        $model = new PartesFormulaModel();
+        $indicadorModel = new IndicadorModel();
 
         $data['parte'] = $model->find($id);
         $data['indicadores'] = $indicadorModel->orderBy('nombre', 'ASC')->findAll();
@@ -67,8 +95,12 @@ class PartesFormulaController extends Controller
     public function deletePartesFormulaModel($id)
     {
         $model = new PartesFormulaModel();
+        $parte = $model->find($id);
         $model->delete($id);
-        return redirect()->to(site_url('partesformula/list'));
+
+        // Redirigir de nuevo al indicador actual si se estaba construyendo
+        return redirect()->to(site_url('partesformula/add?id_indicador=' . $parte['id_indicador']))
+                         ->with('success', 'Parte eliminada correctamente.');
     }
 
     public function uploadCSVForm()
@@ -84,8 +116,8 @@ class PartesFormulaController extends Controller
             $path = $file->getTempName();
             $handle = fopen($path, "r");
 
-            $model = new \App\Models\PartesFormulaModel();
-            $headers = fgetcsv($handle); // skip headers
+            $model = new PartesFormulaModel();
+            fgetcsv($handle); // skip headers
 
             while (($row = fgetcsv($handle, 1000, ';')) !== false) {
                 $model->insert([

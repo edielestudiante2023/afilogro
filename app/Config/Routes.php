@@ -156,3 +156,6 @@ $routes->group('trabajador', ['namespace' => 'App\Controllers'], function($route
 });
 
 
+$routes->get('partesformula/nextorden/(:num)', 'PartesFormulaController::getNextOrden/$1');
+
+
