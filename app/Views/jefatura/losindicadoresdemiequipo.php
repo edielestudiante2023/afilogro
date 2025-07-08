@@ -15,13 +15,13 @@
     <div class="container py-4">
         <h1 class="h3 mb-4">Indicadores del Equipo – Periodo <?= esc($periodo) ?></h1>
 
-        <form method="get" action="<?= base_url('jefatura/losindicadoresdemiequipo') ?>" class="mb-4">
+        <form method="get" action="<?= base_url('jefatura/guardarIndicadoresDeEquipo') ?>" class="mb-4">
             <label for="periodo" class="form-label">Seleccionar Periodo:</label>
             <input type="month" name="periodo" id="periodo" value="<?= esc($periodo) ?>" class="form-control" style="max-width: 200px;" />
             <button type="submit" class="btn btn-primary mt-2">Filtrar</button>
         </form>
 
-        <form method="post" action="<?= base_url('jefatura/saveIndicadoresComoJefe') ?>">
+        <form method="post" action="<?= base_url('jefatura/guardarIndicadoresDeEquipo') ?>">
             <?= csrf_field() ?>
             <div class="table-responsive">
                 <table class="table table-bordered align-middle">
@@ -46,11 +46,9 @@
                     </thead>
                     <tbody>
                         <?php foreach ($equipo as $indicador): ?>
-                            <?php $clave = $indicador['id_indicador_perfil'] . '_' . $indicador['id_usuario']; ?>
                             <tr>
                                 <td>
                                     <?= esc($indicador['nombre_completo']) ?>
-                                    <input type="hidden" name="id_usuario[<?= $clave ?>]" value="<?= esc($indicador['id_usuario']) ?>">
                                 </td>
                                 <td><?= esc($indicador['nombre_indicador']) ?></td>
                                 <td><?= esc($indicador['meta_valor']) ?></td>
@@ -64,11 +62,18 @@
                                 <td><?= esc($indicador['created_at']) ?></td>
                                 <td><?= esc($indicador['periodicidad']) ?></td>
                                 <td><?= esc($indicador['ponderacion']) ?>%</td>
+                                <!-- Campos de edición rápida vinculados a id_historial -->
                                 <td>
-                                    <input type="text" name="resultado_real[<?= $clave ?>]" value="<?= esc($indicador['resultado_real']) ?>" class="form-control">
+                                    <input type="text"
+                                        name="cambios[<?= $indicador['id_historial'] ?>][resultado_real]"
+                                        class="form-control"
+                                        value="<?= esc($indicador['resultado_real']) ?>">
                                 </td>
                                 <td>
-                                    <input type="text" name="comentario[<?= $clave ?>]" value="<?= esc($indicador['comentario']) ?>" class="form-control">
+                                    <input type="text"
+                                        name="cambios[<?= $indicador['id_historial'] ?>][comentario]"
+                                        class="form-control"
+                                        value="<?= esc($indicador['comentario']) ?>">
                                 </td>
                             </tr>
                         <?php endforeach; ?>

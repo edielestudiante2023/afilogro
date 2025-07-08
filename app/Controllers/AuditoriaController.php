@@ -13,7 +13,7 @@ class AuditoriaController extends Controller
 
     public function __construct()
     {
-        helper(['url', 'form']);
+        helper(['url', 'form', 'session']);
         $this->auditoriaModel = new IndicadorAuditoriaModel();
         $this->userModel      = new UserModel();
     }
@@ -24,11 +24,21 @@ class AuditoriaController extends Controller
     public function listAuditoria()
     {
         $auditorias = $this->auditoriaModel
-            ->select('indicador_auditoria.*, users.nombre_completo AS editor_nombre')
+            ->select(
+                'indicador_auditoria.id_auditoria, 
+                 indicador_auditoria.id_historial, 
+                 indicador_auditoria.campo, 
+                 indicador_auditoria.valor_anterior, 
+                 indicador_auditoria.valor_nuevo, 
+                 indicador_auditoria.fecha_edicion, 
+                 users.nombre_completo AS editor_nombre'
+            )
             ->join('users', 'users.id_users = indicador_auditoria.editor_id')
-            ->orderBy('fecha_edicion', 'DESC')
+            ->orderBy('indicador_auditoria.fecha_edicion', 'DESC')
             ->findAll();
 
-        return view('management/list_auditoria', ['auditorias' => $auditorias]);
+        return view('management/list_auditoria', [
+            'auditorias' => $auditorias
+        ]);
     }
 }

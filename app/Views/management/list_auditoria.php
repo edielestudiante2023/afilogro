@@ -1,4 +1,3 @@
-<!-- app/Views/management/list_auditoria.php -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -92,4 +91,5 @@
         });
     </script>
 </body>
+
 </html>

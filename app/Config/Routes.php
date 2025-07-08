@@ -162,3 +162,15 @@ $routes->get('partesformula/nextorden/(:num)', 'PartesFormulaController::getNext
 $routes->get('edicion-indicadores', 'EdicionIndicadoresController::index');
 $routes->post('edicion-indicadores/guardar', 'EdicionIndicadoresController::guardar');
 
+$routes->get('jefatura/losindicadoresdemiequipo', 'JefaturaController::losIndicadoresDeMiEquipo');
+$routes->post('jefatura/losindicadoresdemiequipo', 'JefaturaController::guardarIndicadoresDeEquipo');
+
+$routes->get('jefatura/edicionrapidaequipo', 'JefaturaController::edicionRapidaEquipo');
+$routes->get(  'jefatura/losindicadoresdemiequipo', 'JefaturaController::losIndicadoresDeMiEquipo');
+$routes->post( 'jefatura/guardarIndicadoresDeEquipo', 'JefaturaController::guardarIndicadoresDeEquipo');
+
+$routes->get('auditoria', 'AuditoriaController::index');
+$routes->get('auditoria', 'AuditoriaController::listAuditoria');
+
+
+
