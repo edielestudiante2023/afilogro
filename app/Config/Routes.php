@@ -159,3 +159,6 @@ $routes->group('trabajador', ['namespace' => 'App\Controllers'], function($route
 $routes->get('partesformula/nextorden/(:num)', 'PartesFormulaController::getNextOrden/$1');
 
 
+$routes->get('edicion-indicadores', 'EdicionIndicadoresController::index');
+$routes->post('edicion-indicadores/guardar', 'EdicionIndicadoresController::guardar');
+

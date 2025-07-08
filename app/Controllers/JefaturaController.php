@@ -222,38 +222,40 @@ class JefaturaController extends BaseController
         return redirect()->back()->with('success', 'Registro actualizado y auditado correctamente.');
     }
 
-    public function saveIndicadoresComoJefe()
-    {
-        $post    = $this->request->getPost();
-        $session = session();
-        $userId  = $session->get('id_users');
-        $periodo = date('Y-m');
+  public function saveIndicadoresComoJefe()
+{
+    $post    = $this->request->getPost();
+    $periodo = date('Y-m');
 
-        foreach ($post['resultado_real'] as $ipId => $valor) {
-            $registroExistente = $this->histModel
-                ->where('id_indicador_perfil', $ipId)
-                ->where('id_usuario', $userId)
-                ->where('periodo', $periodo)
-                ->first();
+    foreach ($post['resultado_real'] as $clave => $valor) {
+        // Separar la clave compuesta: id_indicador_perfil_id_usuario
+        [$idIndicadorPerfil, $idUsuario] = explode('_', $clave);
 
-            $data = [
-                'id_indicador_perfil' => $ipId,
-                'id_usuario'          => $userId,
-                'periodo'             => $periodo,
-                'valores_json'        => json_encode(['valor' => $valor]),
-                'resultado_real'      => $valor,
-                'comentario'          => $post['comentario'][$ipId] ?? null,
-                'fecha_registro'      => date('Y-m-d H:i:s'),
-            ];
+        $registroExistente = $this->histModel
+            ->where('id_indicador_perfil', $idIndicadorPerfil)
+            ->where('id_usuario', $idUsuario)
+            ->where('periodo', $periodo)
+            ->first();
 
-            if ($registroExistente) {
-                $this->histModel->update($registroExistente['id_historial'], $data);
-            } else {
-                $this->histModel->insertarSinDuplicar($data);
-            }
+        $data = [
+            'id_indicador_perfil' => $idIndicadorPerfil,
+            'id_usuario'          => $idUsuario,
+            'periodo'             => $periodo,
+            'valores_json'        => json_encode(['valor' => $valor]),
+            'resultado_real'      => $valor,
+            'comentario'          => $post['comentario'][$clave] ?? null,
+            'fecha_registro'      => date('Y-m-d H:i:s'),
+        ];
+
+        if ($registroExistente) {
+            $this->histModel->update($registroExistente['id_historial'], $data);
+        } else {
+            $this->histModel->insertarSinDuplicar($data);
         }
-
-        return redirect()->to('/jefatura/historiallosindicadoresdemiequipo')
-            ->with('success', 'Tus indicadores fueron guardados correctamente.');
     }
+
+    return redirect()->to('/jefatura/losindicadoresdemiequipo')
+        ->with('success', 'Los indicadores del equipo fueron actualizados correctamente.');
+}
+
 }
