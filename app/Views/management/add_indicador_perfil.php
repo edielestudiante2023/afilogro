@@ -47,13 +47,14 @@
                 </select>
             </div>
 
-
             <div class="mb-3">
                 <label class="form-label">Indicador</label>
                 <select name="id_indicador" class="form-select" required>
                     <option value="">-- Selecciona un indicador --</option>
                     <?php foreach ($indicadores as $ind): ?>
-                        <option value="<?= $ind['id_indicador'] ?>"><?= esc($ind['nombre']) ?></option>
+                        <option value="<?= $ind['id_indicador'] ?>">
+                            <?= esc($ind['nombre']) ?> - <?= esc($ind['unidad']) ?> (<?= esc($ind['tipo_meta']) ?>)
+                        </option>
                     <?php endforeach; ?>
                 </select>
             </div>
@@ -64,13 +65,17 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Meta</label>
+                <label class="form-label">Meta (texto)</label>
                 <input type="text" name="meta" class="form-control" value="<?= old('meta') ?>" required>
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Ponderación (%)</label>
                 <input type="number" name="ponderacion" class="form-control" min="0" max="100" value="<?= old('ponderacion') ?>" required>
+            </div>
+
+            <div class="alert alert-info">
+                <strong>Nota:</strong> El <em>valor meta</em>, la <em>unidad</em> y el <em>método de cálculo</em> ya están definidos en el indicador y se mostrarán automáticamente al consultarlo.
             </div>
 
             <div class="d-flex justify-content-start">
@@ -84,7 +89,7 @@
         document.getElementById('perfilSelect').addEventListener('change', function() {
             const selected = this.options[this.selectedIndex];
             const area = selected.getAttribute('data-area') || '';
-            document.getElementById('areaDisplay').value = area;
+            document.getElementById('areaSelect').value = area;
         });
     </script>
 

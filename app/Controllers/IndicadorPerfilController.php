@@ -18,14 +18,17 @@ class IndicadorPerfilController extends Controller
         $this->indicadorModel = new IndicadorModel();
     }
 
-    public function listIndicadorPerfil()
+public function listIndicadorPerfil()
 {
-    // obtenemos items con fórmula incluida
-    $items = $this->indicadorPerfilModel->getIndicadoresConCargoYArea();
+    // Obtenemos items (con fórmula incluida) desde el modelo
+    $indicadores_perfil = $this->indicadorPerfilModel->getIndicadoresConCargoYArea();
 
-    // lo pasamos a la vista que itera sobre $items
-    return view('trabajador/mis_indicadores', compact('items'));
+    // Cargamos la vista de management y le pasamos el array con el mismo nombre que la vista usa:
+    return view('management/list_indicador_perfil', [
+        'indicadores_perfil' => $indicadores_perfil
+    ]);
 }
+
 
 
 

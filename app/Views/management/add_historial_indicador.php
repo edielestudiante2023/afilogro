@@ -21,17 +21,21 @@
   <form action="<?= base_url('historial_indicador/add') ?>" method="post">
     <?= csrf_field() ?>
 
-    <!-- Indicador x Perfil -->
+    <!-- Asignación Indicador x Perfil -->
     <div class="mb-3">
       <label class="form-label">Asignación Indicador x Perfil</label>
       <select name="id_indicador_perfil" class="form-select" required>
         <option value="">-- Seleccione --</option>
         <?php foreach($asignaciones as $a): ?>
           <option value="<?= esc($a['id_indicador_perfil']) ?>" <?= old('id_indicador_perfil') == $a['id_indicador_perfil'] ? 'selected' : '' ?>>
-            <?= esc($a['nombre_indicador'] ?? $a['nombre'] ?? 'Indicador sin nombre') ?> —
-            <?= esc($a['nombre_cargo'] ?? '(Sin cargo)') ?> —
-            <?= esc($a['periodicidad'] ?? '-') ?> —
-            Meta: <?= esc($a['meta_descripcion'] ?? $a['meta_valor'] ?? '-') ?>
+            <?= esc($a['nombre_indicador']) ?> |
+            Periodicidad: <?= esc($a['periodicidad']) ?> |
+            Ponderación: <?= esc($a['ponderacion']) ?>% |
+            Meta Valor: <?= esc($a['meta_valor']) ?> |
+            Meta Desc: <?= esc($a['meta_descripcion']) ?> |
+            Tipo Meta: <?= esc($a['tipo_meta']) ?> |
+            Método: <?= esc($a['metodo_calculo']) ?> |
+            Unidad: <?= esc($a['unidad']) ?>
           </option>
         <?php endforeach; ?>
       </select>
@@ -53,7 +57,7 @@
     <!-- Periodo -->
     <div class="mb-3">
       <label class="form-label">Periodo (YYYY-MM)</label>
-      <input type="text" name="periodo" class="form-control" value="<?= old('periodo') ?>" required>
+      <input type="month" name="periodo" class="form-control" value="<?= old('periodo') ?>" required>
     </div>
 
     <!-- Valores JSON -->
@@ -65,7 +69,7 @@
     <!-- Resultado Real -->
     <div class="mb-3">
       <label class="form-label">Resultado Real</label>
-      <input type="text" name="resultado_real" class="form-control" value="<?= old('resultado_real') ?>" required>
+      <input type="number" step="any" name="resultado_real" class="form-control" value="<?= old('resultado_real') ?>" required>
     </div>
 
     <!-- Comentario -->
@@ -74,14 +78,15 @@
       <textarea name="comentario" class="form-control" rows="2"><?= old('comentario') ?></textarea>
     </div>
 
-    <!-- Datos complementarios del indicador (solo informativos) -->
     <div class="alert alert-secondary">
-      <strong>Nota:</strong> Al guardar, se registrarán también los siguientes campos para fines de trazabilidad:
+      <strong>Datos informativos:</strong>
       <ul class="mb-0">
-        <li><strong>Periodicidad</strong>, <strong>Ponderación</strong>, <strong>Meta Valor</strong>, <strong>Meta Descripción</strong></li>
-        <li><strong>Tipo de Meta</strong>, <strong>Método de Cálculo</strong>, <strong>Unidad</strong></li>
-        <li><strong>Objetivo del Proceso</strong> y <strong>Objetivo de Calidad</strong></li>
+        <li>Tipo Aplicación</li>
+        <li>Objetivo del Proceso</li>
+        <li>Objetivo de Calidad</li>
+        <li>Creado en (fecha indicador)</li>
       </ul>
+      Estos campos se cargarán automáticamente en el historial.
     </div>
 
     <button type="submit" class="btn btn-success">Guardar Registro</button>

@@ -89,17 +89,17 @@ class IndicadorController extends BaseController
     public function editIndicadorPost($id)
     {
         $rules = [
-            'nombre'             => 'required',
-            'periodicidad'       => 'required',
-            'ponderacion'        => 'required|numeric',
-            'meta_valor'         => 'required',
-            'meta_descripcion'   => 'required',
-            'tipo_meta'          => 'required',
-            'metodo_calculo'     => 'required',
-            'unidad'             => 'required',
-            'objetivo_proceso'   => 'required',
-            'objetivo_calidad'   => 'required',
-            'tipo_aplicacion'    => 'required|in_list[cargo,area]'
+            'nombre'          => 'required',
+            'periodicidad'    => 'required',
+            'ponderacion'     => 'required',
+            'meta_valor'      => 'required',
+            'meta_descripcion' => 'required',
+            'tipo_meta'       => 'required|in_list[fija,comparativa]',
+            'metodo_calculo'  => 'required|in_list[formula,manual,semiautomatico]',
+            'unidad'          => 'required',
+            'objetivo_proceso' => 'required',
+            'objetivo_calidad' => 'required',
+            'tipo_aplicacion' => 'required|in_list[cargo,area]'
         ];
 
         if (! $this->validate($rules)) {
@@ -108,10 +108,21 @@ class IndicadorController extends BaseController
                 ->withInput();
         }
 
+        // Actualiza el indicador
         $data = $this->request->getPost();
         $this->indicadorModel->update($id, $data);
-        return redirect()->to('/indicadores')->with('success', 'Indicador actualizado.');
+
+        // Si presionó “Guardar y Diseñar Fórmula”, redirige al constructor de partes
+        if ($this->request->getPost('accion') === 'guardar_disenar') {
+            return redirect()->to('/partesformula/add?id_indicador=' . $id)
+                ->with('success', 'Indicador actualizado. Ahora edita la fórmula.');
+        }
+
+        // Caso contrario, vuelve al listado
+        return redirect()->to('/indicadores')
+            ->with('success', 'Indicador actualizado correctamente.');
     }
+
 
     public function deleteIndicador($id)
     {

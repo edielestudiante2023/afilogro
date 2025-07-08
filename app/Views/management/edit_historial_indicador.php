@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Editar Historial Indicador – Afilogro</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-
 <body>
   <?= $this->include('partials/nav') ?>
 
@@ -23,17 +21,21 @@
     <form action="<?= base_url('historial_indicador/edit/' . $record['id_historial']) ?>" method="post">
       <?= csrf_field() ?>
 
-      <!-- Indicador x Perfil -->
+      <!-- Asignación Indicador x Perfil -->
       <div class="mb-3">
         <label class="form-label">Asignación Indicador x Perfil</label>
         <select name="id_indicador_perfil" class="form-select" required>
           <?php foreach ($asignaciones as $a): ?>
-            <option value="<?= $a['id_indicador_perfil'] ?>"
+            <option value="<?= esc($a['id_indicador_perfil']) ?>"
               <?= $a['id_indicador_perfil'] == $record['id_indicador_perfil'] ? 'selected' : '' ?>>
-              <?= esc($a['nombre_indicador'] ?? $a['nombre'] ?? 'Indicador sin nombre') ?>
-              -
-              <?= esc($a['nombre_cargo'] ?? '(Sin cargo definido)') ?>
-
+              <?= esc($a['nombre_indicador']) ?> |
+              Periodicidad: <?= esc($a['periodicidad']) ?> |
+              Ponderación: <?= esc($a['ponderacion']) ?>% |
+              Meta Valor: <?= esc($a['meta_valor']) ?> |
+              Meta Desc: <?= esc($a['meta_descripcion']) ?> |
+              Tipo Meta: <?= isset($a['tipo_meta']) ? esc($a['tipo_meta']) : '' ?> ?> |
+              Método: <?= esc($a['metodo_calculo']) ?> |
+              Unidad: <?= esc($a['unidad']) ?>
             </option>
           <?php endforeach; ?>
         </select>
@@ -51,67 +53,70 @@
         </select>
       </div>
 
-      <!-- Periodicidad -->
-      <div class="mb-3">
-        <label class="form-label">Periodicidad</label>
-        <input type="text" class="form-control" value="<?= esc($record['periodicidad'] ?? '-') ?>" readonly>
+      <!-- Datos informativos del Indicador -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-6">
+          <label class="form-label">Periodicidad</label>
+          <input type="text" class="form-control" value="<?= esc($record['periodicidad']) ?>" readonly>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Ponderación</label>
+          <input type="text" class="form-control" value="<?= esc($record['ponderacion']) ?>%" readonly>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Meta Valor</label>
+          <input type="text" class="form-control" value="<?= esc($record['meta_valor']) ?>" readonly>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Meta Descripción</label>
+          <input type="text" class="form-control" value="<?= esc($record['meta_descripcion']) ?>" readonly>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Tipo Meta</label>
+          <input type="text" class="form-control" value="<?= esc($record['tipo_meta']) ?>" readonly>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Método de Cálculo</label>
+          <input type="text" class="form-control" value="<?= esc($record['metodo_calculo']) ?>" readonly>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Unidad</label>
+          <input type="text" class="form-control" value="<?= esc($record['unidad']) ?>" readonly>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Objetivo Proceso</label>
+          <input type="text" class="form-control" value="<?= esc($record['objetivo_proceso']) ?>" readonly>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Objetivo Calidad</label>
+          <input type="text" class="form-control" value="<?= esc($record['objetivo_calidad']) ?>" readonly>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Tipo Aplicación</label>
+          <input type="text" class="form-control" value="<?= esc($record['tipo_aplicacion']) ?>" readonly>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Creado en</label>
+          <input type="text" class="form-control" value="<?= esc($record['created_at']) ?>" readonly>
+        </div>
       </div>
 
-      <!-- Ponderación -->
-      <div class="mb-3">
-        <label class="form-label">Ponderación</label>
-        <input type="text" class="form-control" value="<?= esc($record['ponderacion']) ?>%" readonly>
-      </div>
-
-      <!-- Meta Valor -->
-      <div class="mb-3">
-        <label class="form-label">Meta Valor</label>
-        <input type="text" class="form-control" value="<?= esc($record['meta_valor']) ?>" readonly>
-      </div>
-
-      <!-- Meta Descripción -->
-      <div class="mb-3">
-        <label class="form-label">Meta Descripción</label>
-        <input type="text" class="form-control" value="<?= esc($record['meta_descripcion']) ?>" readonly>
-      </div>
-
-      <!-- Tipo Meta -->
-      <div class="mb-3">
-        <label class="form-label">Tipo Meta</label>
-        <input type="text" class="form-control" value="<?= esc($record['tipo_meta']) ?>" readonly>
-      </div>
-
-      <!-- Método de Cálculo -->
-      <div class="mb-3">
-        <label class="form-label">Método de Cálculo</label>
-        <input type="text" class="form-control" value="<?= esc($record['metodo_calculo']) ?>" readonly>
-      </div>
-
-      <!-- Unidad -->
-      <div class="mb-3">
-        <label class="form-label">Unidad</label>
-        <input type="text" class="form-control" value="<?= esc($record['unidad']) ?>" readonly>
-      </div>
-
-      <!-- Periodo -->
+      <!-- Editable: Periodo, JSON, Resultado, Comentario -->
       <div class="mb-3">
         <label class="form-label">Periodo (YYYY-MM)</label>
-        <input type="text" name="periodo" class="form-control" value="<?= old('periodo', esc($record['periodo'])) ?>" required>
+        <input type="month" name="periodo" class="form-control" value="<?= old('periodo', esc($record['periodo'])) ?>" required>
       </div>
 
-      <!-- Valores JSON -->
       <div class="mb-3">
         <label class="form-label">Valores JSON</label>
         <textarea name="valores_json" class="form-control" rows="2" required><?= old('valores_json', esc($record['valores_json'])) ?></textarea>
       </div>
 
-      <!-- Resultado Real -->
       <div class="mb-3">
         <label class="form-label">Resultado Real</label>
-        <input type="text" name="resultado_real" class="form-control" value="<?= old('resultado_real', esc($record['resultado_real'])) ?>" required>
+        <input type="number" step="any" name="resultado_real" class="form-control" value="<?= old('resultado_real', esc($record['resultado_real'])) ?>" required>
       </div>
 
-      <!-- Comentario -->
       <div class="mb-3">
         <label class="form-label">Comentario</label>
         <textarea name="comentario" class="form-control" rows="2"><?= old('comentario', esc($record['comentario'])) ?></textarea>
@@ -123,5 +128,4 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>

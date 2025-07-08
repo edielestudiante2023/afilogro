@@ -99,7 +99,7 @@ class PartesFormulaController extends Controller
         $model->delete($id);
 
         // Redirigir de nuevo al indicador actual si se estaba construyendo
-        return redirect()->to(site_url('partesformula/add?id_indicador=' . $parte['id_indicador']))
+        return redirect()->to(site_url('/partesformula/list'))
                          ->with('success', 'Parte eliminada correctamente.');
     }
 

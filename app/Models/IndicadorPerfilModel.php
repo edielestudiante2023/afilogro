@@ -20,27 +20,32 @@ class IndicadorPerfilModel extends Model
     /**
      * Obtiene indicadores junto con datos relevantes de la tabla indicadores
      */
-   public function getIndicadoresPorPerfil($idPerfil)
-{
-    return $this->select('
-            indicadores_perfil.*,
-            indicadores.nombre,
-            indicadores.periodicidad,
-            indicadores.meta_valor,
-            indicadores.meta_descripcion,
-            indicadores.tipo_meta,
-            indicadores.metodo_calculo,
-            indicadores.activo,
-            indicadores.unidad,
-            indicadores.objetivo_proceso,
-            indicadores.objetivo_calidad,
-            indicadores.created_at
-            
-        ')
-        ->join('indicadores', 'indicadores.id_indicador = indicadores_perfil.id_indicador')
-        ->where('indicadores_perfil.id_perfil_cargo', $idPerfil)
-        ->findAll();
-}
+     public function getIndicadoresPorPerfil(int $idPerfil): array
+    {
+        return $this->select([
+                'indicadores_perfil.id_indicador_perfil',
+                'indicadores_perfil.id_indicador',
+                'indicadores_perfil.id_perfil_cargo',
+                'indicadores_perfil.meta',
+                'indicadores_perfil.periodicidad',
+                'indicadores_perfil.ponderacion',
+
+                'indicadores.nombre AS nombre_indicador',
+                'indicadores.meta_valor',
+                'indicadores.meta_descripcion',
+                'indicadores.tipo_meta',
+                'indicadores.metodo_calculo',
+                'indicadores.unidad',
+                'indicadores.objetivo_proceso',
+                'indicadores.objetivo_calidad',
+                'indicadores.tipo_aplicacion',
+                'indicadores.created_at',
+            ])
+            ->join('indicadores', 'indicadores.id_indicador = indicadores_perfil.id_indicador')
+            ->where('indicadores_perfil.id_perfil_cargo', $idPerfil)
+            ->orderBy('indicadores_perfil.id_indicador_perfil', 'ASC')
+            ->findAll();
+    }
 
     /**
      * Obtiene todos los indicadores con el nombre del cargo
@@ -61,20 +66,37 @@ class IndicadorPerfilModel extends Model
     /**
      * Obtiene indicadores con datos de cargo y área
      */
-    public function getIndicadoresConCargoYArea()
-    {
-        return $this->select('
-            indicadores_perfil.*,
-            indicadores.nombre AS nombre_indicador,
-            perfiles_cargo.nombre_cargo,
-            perfiles_cargo.area,
-            areas.nombre_area
-        ')
-        ->join('indicadores', 'indicadores.id_indicador = indicadores_perfil.id_indicador')
-        ->join('perfiles_cargo', 'perfiles_cargo.id_perfil_cargo = indicadores_perfil.id_perfil_cargo')
-        ->join('areas', 'areas.nombre_area = perfiles_cargo.area')
-        ->where('areas.estado_area', 'activa')
-        ->orderBy('areas.nombre_area', 'ASC')
-        ->findAll();
-    }
+public function getIndicadoresConCargoYArea()
+{
+    return $this->db->table('indicadores_perfil ip')
+        ->select([
+            'ip.id_indicador_perfil',
+            'ip.id_indicador',
+            'ip.id_perfil_cargo',
+            'c.nombre_cargo AS nombre_cargo',
+            'a.nombre_area AS nombre_area',
+            'i.nombre AS nombre_indicador',
+            'ip.periodicidad',
+            'ip.meta',
+            'ip.ponderacion',
+            'i.meta_valor',
+            'i.meta_descripcion',
+            'i.tipo_meta',
+            'i.metodo_calculo',
+            'i.unidad',
+            'i.objetivo_proceso',
+            'i.objetivo_calidad',
+            'i.tipo_aplicacion',
+            'i.created_at',
+        ])
+        ->join('perfiles_cargo c', 'ip.id_perfil_cargo = c.id_perfil_cargo')
+        ->join('areas a', 'c.area = a.nombre_area')
+        ->join('indicadores i', 'ip.id_indicador = i.id_indicador')
+        ->orderBy('a.nombre_area, c.nombre_cargo, i.nombre')
+        ->get()
+        ->getResultArray();
 }
+
+}
+
+

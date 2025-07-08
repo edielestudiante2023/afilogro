@@ -1,9 +1,8 @@
-<!-- app/Views/jefatura/misindicadorescomojefe.php -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Mis Indicadores como Jefe – Afilogro</title>
+    <title>Mis Indicadores como Jefatura – Afilogro</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -28,29 +27,39 @@
                 <thead class="table-dark">
                 <tr>
                     <th>Indicador</th>
-                    <th>Objetivo del Proceso</th>
+                    <th>Meta Valor</th>
+                    <th>Meta Descripción</th>
+                    <th>Tipo de Meta</th>
                     <th>Fórmula</th>
-                    
                     <th>Unidad</th>
+                    <th>Objetivo Proceso</th>
+                    <th>Objetivo Calidad</th>
+                    <th>Tipo Aplicación</th>
+                    <th>Creado en</th>
                     <th>Periodicidad</th>
-                    <th>Meta</th>
-                    <th>Ponderación</th>
+                    <th>Meta (texto)</th>
+                    <th>Ponderación (%)</th>
                     <th>Resultado</th>
                     <th>Comentario</th>
                 </tr>
                 </thead>
                 <tbody>
-                <?php foreach ($items as $i): 
-                    $valor      = $histMap[$i['id_indicador_perfil']]['resultado_real'] ?? '';
-                    $comentario = $histMap[$i['id_indicador_perfil']]['comentario']     ?? '';
-                    
-                ?>
+                <?php foreach ($items as $i): ?>
+                    <?php
+                        $valor      = $histMap[$i['id_indicador_perfil']]['resultado_real'] ?? '';
+                        $comentario = $histMap[$i['id_indicador_perfil']]['comentario']      ?? '';
+                    ?>
                     <tr>
                         <td><strong><?= esc($i['nombre']) ?></strong></td>
-                        <td class="small text-muted"><?= esc($i['objetivo_proceso']) ?></td>
-                        <td><code><?= esc($i['metodo_calculo']) ?></code></td>
-
-                        <td><?= esc($i['unidad']) ?></td>
+                        <td><?= isset($i['meta_valor']) ? esc($i['meta_valor']) : '' ?></td>
+                        <td><?= isset($i['meta_descripcion']) ? esc($i['meta_descripcion']) : ''?></td>
+                        <td><?= isset($i['tipo_meta']) ? esc($i['tipo_meta']) : '' ?></td>
+                        <td><code><?= isset($i['metodo_calculo']) ? esc($i['metodo_calculo']) : '' ?></code></td>
+                        <td><?= isset($i['unidad']) ? esc($i['unidad']) : '' ?></td>
+                        <td class="small text-muted"><?= isset($i['objetivo_proceso']) ? esc($i['objetivo_proceso']) : '' ?></td>
+                        <td class="small text-muted"><?= isset($i['objetivo_calidad']) ? esc($i['objetivo_calidad']) : '' ?></td>
+                        <td><?= isset($i['tipo_aplicacion']) ? esc($i['tipo_aplicacion']) : '' ?></td>
+                        <td><?= isset($i['created_at']) ? esc($i['created_at']) : '' ?></td>
                         <td><?= esc($i['periodicidad']) ?></td>
                         <td><?= esc($i['meta']) ?></td>
                         <td><?= esc($i['ponderacion']) ?>%</td>
@@ -60,16 +69,14 @@
                                 name="resultado_real[<?= $i['id_indicador_perfil'] ?>]"
                                 value="<?= esc($valor) ?>"
                                 class="form-control"
-                                
+                            >
                         </td>
                         <td>
                             <textarea 
-                            name="comentario[<?= $i['id_indicador_perfil'] ?>]"
+                                name="comentario[<?= $i['id_indicador_perfil'] ?>]"
                                 class="form-control"
                                 rows="1"
-                            ></textarea>
-                                
-                                
+                            ><?= esc($comentario) ?></textarea>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -77,18 +84,15 @@
             </table>
         </div>
 
-       
-            <div class="d-flex justify-content-end">
-                <button type="submit" class="btn btn-primary">Guardar Resultados</button>
-            </div>
-        
-            
-            <div class="text-end">
-                <a href="<?= base_url('jefatura/historialmisindicadoresfeje') ?>" class="btn btn-secondary">
-                    Ver mi Historial
-                </a>
-            </div>
-       
+        <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-primary">Guardar Resultados</button>
+        </div>
+
+        <div class="text-end mt-3">
+            <a href="<?= base_url('jefatura/historialmisindicadoresfeje') ?>" class="btn btn-secondary">
+                Ver mi Historial
+            </a>
+        </div>
     </form>
 
     <div class="mt-4">

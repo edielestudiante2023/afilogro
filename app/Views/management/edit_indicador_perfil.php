@@ -5,11 +5,12 @@
     <meta charset="UTF-8">
     <title>Editar Indicador Asignado – Afilogro</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
 <body>
-<?= $this->include('partials/nav') ?>
+    <?= $this->include('partials/nav') ?>
 
     <div class="container py-4">
         <h1 class="h4 mb-4">Editar Asignación de Indicador</h1>
@@ -26,11 +27,11 @@
             <?= csrf_field() ?>
 
             <div class="mb-3">
-                <label class="form-label">Cargo / Perfil</label>
+                <label for="perfilSelect" class="form-label">Cargo / Perfil</label>
                 <select name="id_perfil_cargo" id="perfilSelect" class="form-select" required>
                     <option value="">-- Selecciona un cargo --</option>
                     <?php foreach ($perfiles as $p): ?>
-                        <option value="<?= $p['id_perfil_cargo'] ?>" data-area="<?= esc($p['area']) ?>" <?= $p['id_perfil_cargo'] == $registro['id_perfil_cargo'] ? 'selected' : '' ?>>
+                        <option value="<?= $p['id_perfil_cargo'] ?>" <?= $p['id_perfil_cargo'] == $registro['id_perfil_cargo'] ? 'selected' : '' ?>>
                             <?= esc($p['nombre_cargo']) ?>
                         </option>
                     <?php endforeach; ?>
@@ -38,43 +39,34 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Área</label>
-                <select name="area" id="areaSelect" class="form-select" required>
-                    <option value="">-- Selecciona un área --</option>
-                    <?php foreach ($areas as $a): ?>
-                        <option value="<?= $a['nombre_area'] ?>" <?= $a['nombre_area'] == $registro['area'] ? 'selected' : '' ?>>
-                            <?= esc($a['nombre_area']) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-
-            <div class="mb-3">
-                <label class="form-label">Indicador</label>
-                <select name="id_indicador" class="form-select" required>
+                <label for="indicadorSelect" class="form-label">Indicador</label>
+                <select name="id_indicador" id="indicadorSelect" class="form-select" required>
                     <option value="">-- Selecciona un indicador --</option>
                     <?php foreach ($indicadores as $ind): ?>
                         <option value="<?= $ind['id_indicador'] ?>" <?= $ind['id_indicador'] == $registro['id_indicador'] ? 'selected' : '' ?>>
-                            <?= esc($ind['nombre']) ?>
+                            <?= esc($ind['nombre']) ?> - <?= esc($ind['unidad']) ?> (<?= esc($ind['tipo_meta']) ?>)
                         </option>
                     <?php endforeach; ?>
                 </select>
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Periodicidad</label>
-                <input type="text" name="periodicidad" class="form-control" value="<?= esc($registro['periodicidad']) ?>" required>
+                <label for="periodicidad" class="form-label">Periodicidad</label>
+                <input type="text" name="periodicidad" id="periodicidad" class="form-control" value="<?= esc($registro['periodicidad']) ?>" required>
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Meta</label>
-                <input type="text" name="meta" class="form-control" value="<?= esc($registro['meta']) ?>" required>
+                <label for="meta" class="form-label">Meta (texto)</label>
+                <input type="text" name="meta" id="meta" class="form-control" value="<?= esc($registro['meta']) ?>" required>
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Ponderación (%)</label>
-                <input type="number" name="ponderacion" class="form-control" value="<?= esc($registro['ponderacion']) ?>" min="0" max="100" required>
+                <label for="ponderacion" class="form-label">Ponderación (%)</label>
+                <input type="number" name="ponderacion" id="ponderacion" class="form-control" min="0" max="100" value="<?= esc($registro['ponderacion']) ?>" required>
+            </div>
+
+            <div class="alert alert-info">
+                <strong>Nota:</strong> El <em>valor meta</em>, la <em>unidad</em> y el <em>método de cálculo</em> ya están definidos en el indicador y se mostrarán automáticamente al consultarlo.
             </div>
 
             <div class="d-flex justify-content-start">
@@ -84,18 +76,7 @@
         </form>
     </div>
 
-    <script>
-        function updateArea() {
-            const select = document.getElementById('perfilSelect');
-            const selected = select.options[select.selectedIndex];
-            const area = selected.getAttribute('data-area') || '';
-            document.getElementById('areaDisplay').value = area;
-        }
-
-        document.getElementById('perfilSelect').addEventListener('change', updateArea);
-        window.addEventListener('DOMContentLoaded', updateArea);
-    </script>
-
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

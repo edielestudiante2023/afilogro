@@ -28,20 +28,28 @@
           <tr>
             <th>ID</th>
             <th>Indicador</th>
-
             <th>Tipo de Parte</th>
             <th>Valor</th>
             <th>Orden</th>
             <th>Acciones</th>
           </tr>
         </thead>
+        <tfoot>
+          <tr>
+            <th><input type="text" placeholder="Buscar ID" class="form-control form-control-sm" /></th>
+            <th><input type="text" placeholder="Buscar Indicador" class="form-control form-control-sm" /></th>
+            <th><input type="text" placeholder="Buscar Tipo" class="form-control form-control-sm" /></th>
+            <th><input type="text" placeholder="Buscar Valor" class="form-control form-control-sm" /></th>
+            <th><input type="text" placeholder="Buscar Orden" class="form-control form-control-sm" /></th>
+            <th></th>
+          </tr>
+        </tfoot>
         <tbody>
           <?php if (! empty($partes)): ?>
             <?php foreach ($partes as $parte): ?>
               <tr>
                 <td><?= esc($parte['id_parte_formula']) ?></td>
                 <td><?= esc($parte['nombre_indicador']) ?></td>
-
                 <td><?= esc($parte['tipo_parte']) ?></td>
                 <td><?= esc($parte['valor']) ?></td>
                 <td><?= esc($parte['orden']) ?></td>
@@ -77,7 +85,7 @@
 
   <script>
     $(document).ready(function() {
-      $('#partesTable').DataTable({
+      var table = $('#partesTable').DataTable({
         responsive: true,
         dom: 'Bfrtip',
         buttons: [
@@ -89,9 +97,23 @@
         language: {
           url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
         },
+        order: [[0, 'desc']], // Orden por defecto por ID descendente
         columnDefs: [
           { orderable: false, targets: -1 }  // Deshabilita orden en columna de acciones
-        ]
+        ],
+        initComplete: function () {
+          // Aplicar filtros en tfoot
+          this.api().columns().every(function () {
+            var column = this;
+            $('input', column.footer()).on('keyup change clear', function () {
+              if (column.search() !== this.value) {
+                column
+                  .search(this.value)
+                  .draw();
+              }
+            });
+          });
+        }
       });
     });
   </script>

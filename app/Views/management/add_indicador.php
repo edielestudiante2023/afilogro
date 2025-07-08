@@ -1,4 +1,3 @@
-<!-- app/Views/management/add_indicador.php -->
 <!DOCTYPE html>
 <html lang="es">
 
@@ -41,14 +40,13 @@
             <!-- Ponderación -->
             <div class="mb-3">
                 <label class="form-label">Ponderación (%)</label>
-                <input type="number" name="ponderacion" class="form-control" min="0" max="100"
-                    value="<?= old('ponderacion') ?>" required>
+                <input type="number" name="ponderacion" class="form-control" min="0" max="100" value="<?= old('ponderacion') ?>" required>
             </div>
 
             <!-- Meta Valor -->
             <div class="mb-3">
                 <label class="form-label">Meta Valor</label>
-                <input type="text" name="meta_valor" class="form-control" value="<?= old('meta_valor') ?>" required>
+                <input type="number" step="any" name="meta_valor" class="form-control" value="<?= old('meta_valor') ?>" required>
             </div>
 
             <!-- Meta Descripción -->
@@ -92,7 +90,7 @@
 
             <!-- Objetivo de Calidad -->
             <div class="mb-3">
-                <label class="form-label">Objetivo de Calidad que Impacta</label>
+                <label class="form-label">Objetivo de Calidad</label>
                 <input type="text" name="objetivo_calidad" class="form-control" value="<?= old('objetivo_calidad') ?>" required>
             </div>
 
@@ -106,16 +104,16 @@
                 </select>
             </div>
 
-            <!-- Al final de add_indicador.php, junto al botón Guardar -->
+            <!-- Activo -->
+            <div class="form-check form-switch mb-4">
+                <input class="form-check-input" type="checkbox" id="activoSwitch" name="activo" value="1" <?= old('activo', '1') ? 'checked' : '' ?> >
+                <label class="form-check-label" for="activoSwitch">Activo</label>
+            </div>
 
-
-
-
-
+            <!-- Botón Guardar y Diseñar -->
             <button type="submit" name="accion" value="guardar_disenar" class="btn btn-success">
                 <i class="bi bi-gear me-1"></i> Guardar y Diseñar Fórmula
             </button>
-
         </form>
     </div>
 
