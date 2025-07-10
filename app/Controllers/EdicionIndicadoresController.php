@@ -26,6 +26,15 @@ class EdicionIndicadoresController extends Controller
 
         $subIds = array_column($this->userModel->getSubordinadosDeJefe($jefeId), 'id_users');
 
+        // Si no hay subordinados, es porque no es un jefe:
+        if (empty($subIds)) {
+            // Puedes cambiar el estilo HTML como prefieras:
+            echo '<h2>Acceso denegado</h2>'
+                . '<p>Para acceder a este recurso, ingresa con credenciales de un <strong>jefe</strong>.</p>';
+            return; // detenemos la ejecución antes de la consulta
+        }
+
+
         $equipo = $this->histModel
             ->select([
                 'historial_indicadores.id_historial',
