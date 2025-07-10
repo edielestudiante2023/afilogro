@@ -123,53 +123,48 @@ public function saveIndicadoresComoJefe()
     /**
      * Edición rápida de indicadores del equipo
      */
-public function losIndicadoresDeMiEquipo()
-{
-    // 1) Filtro por mes (YYYY-MM), o mes actual por defecto
-    $periodo = $this->request->getGet('periodo') ?? date('Y-m');
+ public function losIndicadoresDeMiEquipo()
+    {
+        // 1) Filtros de rango de fecha (YYYY-MM-DD)
+        $fechaDesde = $this->request->getGet('fecha_desde') ?? date('Y-m-01');
+        $fechaHasta = $this->request->getGet('fecha_hasta') ?? date('Y-m-d');
 
-    // 2) IDs de subordinados + el jefe
-    $jefeId = session()->get('id_users');
-    $subs   = $this->userModel->getSubordinadosDeJefe($jefeId);
-    $subIds = array_unique(array_column($subs, 'id_users'));
-    $subIds[] = $jefeId;
+        // 2) IDs de subordinados + el jefe
+        $jefeId = session()->get('id_users');
+        $subs   = $this->userModel->getSubordinadosDeJefe($jefeId);
+        $subIds = array_unique(array_column($subs, 'id_users'));
+        $subIds[] = $jefeId;
 
-    // 3) Traigo solo las filas de historial que coinciden con ese periodo y esos usuarios
-    $equipo = $this->histModel
-        ->select([
-            'historial_indicadores.id_historial',
-            'usuarios.nombre_completo      AS nombre_completo',
-            'i.nombre                       AS nombre_indicador',
-            'i.meta_valor                   AS meta_valor',
-            'i.meta_descripcion             AS meta_descripcion',
-            'i.tipo_meta                    AS tipo_meta',
-            'i.metodo_calculo               AS metodo_calculo',
-            'i.unidad                       AS unidad',
-            'i.objetivo_proceso             AS objetivo_proceso',
-            'i.objetivo_calidad             AS objetivo_calidad',
-            'i.tipo_aplicacion              AS tipo_aplicacion',
-            'i.created_at                   AS created_at',
-            'historial_indicadores.fecha_registro',
-            'i.periodicidad                 AS periodicidad',
-            'i.ponderacion                  AS ponderacion',
-            'historial_indicadores.resultado_real',
-            'historial_indicadores.comentario',
-        ])
-        ->join('indicadores_perfil ip', 'ip.id_indicador_perfil = historial_indicadores.id_indicador_perfil')
-        ->join('indicadores i',           'i.id_indicador         = ip.id_indicador')
-        ->join('users AS usuarios',       'usuarios.id_users     = historial_indicadores.id_usuario')
-        ->whereIn('historial_indicadores.id_usuario', $subIds)
-        ->where('historial_indicadores.periodo', $periodo)
-        ->orderBy('usuarios.nombre_completo', 'ASC')
-        ->orderBy('historial_indicadores.fecha_registro', 'DESC')
-        ->findAll();
+        // 3) Consulta de indicadores en el rango de fecha
+        $equipo = $this->histModel
+            ->select([
+                'historial_indicadores.id_historial',
+                'usuarios.nombre_completo AS nombre_completo',
+                'i.nombre AS nombre_indicador',
+                'i.meta_valor AS meta_valor',
+                'i.tipo_meta AS tipo_meta',
+                'i.metodo_calculo AS metodo_calculo',
+                'i.unidad AS unidad',
+                'historial_indicadores.resultado_real',
+                'historial_indicadores.comentario',
+            ])
+            ->join('indicadores_perfil ip', 'ip.id_indicador_perfil = historial_indicadores.id_indicador_perfil')
+            ->join('indicadores i',            'i.id_indicador = ip.id_indicador')
+            ->join('users AS usuarios',        'usuarios.id_users = historial_indicadores.id_usuario')
+            ->whereIn('historial_indicadores.id_usuario', $subIds)
+            ->where('historial_indicadores.fecha_registro >=', $fechaDesde)
+            ->where('historial_indicadores.fecha_registro <=', $fechaHasta)
+            ->orderBy('usuarios.nombre_completo', 'ASC')
+            ->orderBy('historial_indicadores.fecha_registro', 'DESC')
+            ->findAll();
 
-    // 4) Retorno la vista con $equipo y $periodo
-    return view('jefatura/losindicadoresdemiequipo', [
-        'equipo'  => $equipo,
-        'periodo' => $periodo,
-    ]);
-}
+        // 4) Retornar vista con datos y filtros
+        return view('jefatura/losindicadoresdemiequipo', [
+            'equipo'        => $equipo,
+            'fecha_desde'   => $fechaDesde,
+            'fecha_hasta'   => $fechaHasta,
+        ]);
+    }
 
 
 
