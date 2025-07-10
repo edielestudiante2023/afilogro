@@ -76,62 +76,76 @@ class TrabajadorController extends BaseController
      * Guarda nuevos resultados de indicadores en historial
      */
     public function saveIndicadores()
-    {
-        $session = session();
-        $userId  = $session->get('id_users');
-        $periodo = date('Y-m');
-        $post    = $this->request->getPost();
+{
+    $session   = session();
+    $userId    = $session->get('id_users');
+    $periodo   = date('Y-m');
+    $resultados  = $this->request->getPost('resultado_real') ?? [];
+    $comentarios = $this->request->getPost('comentario')      ?? [];
 
-        foreach ($post['resultado_real'] as $ipId => $valor) {
-            $this->histModel->insert([
-                'id_indicador_perfil' => $ipId,
-                'id_usuario'          => $userId,
-                'periodo'             => $periodo,
-                'valores_json'        => json_encode(['valor' => $valor]),
-                'resultado_real'      => $valor,
-                'comentario'          => $post['comentario'][$ipId] ?? null,
-                'fecha_registro'      => date('Y-m-d H:i:s'),
-            ]);
+    foreach ($resultados as $ipId => $valor) {
+        $valor = trim($valor);
+        if ($valor === '') {
+            continue;   // no guardar si está vacío
         }
 
-        return redirect()->to('/trabajador/historialResultados')
-            ->with('success', 'Resultados guardados en el historial.');
+        $this->histModel->insert([
+            'id_indicador_perfil' => $ipId,
+            'id_usuario'          => $userId,
+            'periodo'             => $periodo,
+            'valores_json'        => json_encode(['valor' => $valor]),
+            'resultado_real'      => $valor,
+            'comentario'          => trim($comentarios[$ipId] ?? ''),
+            'fecha_registro'      => date('Y-m-d H:i:s'),
+        ]);
     }
+
+    return redirect()->to('/trabajador/historialResultados')
+        ->with('success','Resultado(s) guardado(s) correctamente.');
+}
+
 
     /**
      * Muestra historial de resultados con datos extendidos del indicador
      */
-    public function historialResultados()
-    {
-        $session = session();
-        $userId  = $session->get('id_users');
+public function historialResultados()
+{
+    $session    = session();
+    $userId     = $session->get('id_users');
+    $fechaDesde = $this->request->getGet('fecha_desde') ?? date('Y-m-01');
+    $fechaHasta = $this->request->getGet('fecha_hasta') ?? date('Y-m-d');
 
-        $historial = $this->histModel
-            ->select([
-                'historial_indicadores.*',
-                'indicadores.id_indicador',
-                'indicadores.nombre AS nombre_indicador',
-                'indicadores.periodicidad',
-                'indicadores.meta_valor',
-                'indicadores.meta_descripcion',
-                'indicadores.tipo_meta',
-                'indicadores.metodo_calculo',
-                'indicadores.unidad',
-                'indicadores.objetivo_proceso',
-                'indicadores.objetivo_calidad',
-                'indicadores.tipo_aplicacion',
-                'indicadores.created_at',
-                'indicadores_perfil.meta',
-                'indicadores_perfil.ponderacion',
-            ])
-            ->join('indicadores_perfil', 'indicadores_perfil.id_indicador_perfil = historial_indicadores.id_indicador_perfil')
-            ->join('indicadores', 'indicadores.id_indicador = indicadores_perfil.id_indicador')
-            ->where('historial_indicadores.id_usuario', $userId)
-            ->orderBy('historial_indicadores.fecha_registro', 'DESC')
-            ->findAll();
+    $historial = $this->histModel
+        ->select([
+            'historial_indicadores.*',
+            'indicadores.nombre           AS nombre_indicador',
+            'indicadores.meta_valor',
+            'indicadores.meta_descripcion',
+            'indicadores.tipo_meta',
+            'indicadores.metodo_calculo',
+            'indicadores.unidad',
+            'indicadores.objetivo_proceso',
+            'indicadores.objetivo_calidad',
+            'indicadores.tipo_aplicacion',
+            'indicadores.created_at',
+            'indicadores.periodicidad      AS periodicidad',      // ← AQUÍ
+            'indicadores_perfil.meta',
+            'indicadores_perfil.ponderacion',
+        ])
+        ->join('indicadores_perfil', 'indicadores_perfil.id_indicador_perfil = historial_indicadores.id_indicador_perfil')
+        ->join('indicadores',         'indicadores.id_indicador = indicadores_perfil.id_indicador')
+        ->where('historial_indicadores.id_usuario', $userId)
+        ->where('historial_indicadores.fecha_registro >=', $fechaDesde . ' 00:00:00')
+        ->where('historial_indicadores.fecha_registro <=', $fechaHasta . ' 23:59:59')
+        ->orderBy('historial_indicadores.fecha_registro', 'DESC')
+        ->findAll();
 
-        return view('trabajador/historial_resultados', [
-            'historial' => $historial,
-        ]);
-    }
+    return view('trabajador/historial_resultados', [
+        'historial'   => $historial,
+        'fecha_desde' => $fechaDesde,
+        'fecha_hasta' => $fechaHasta,
+    ]);
+}
+
+
 }

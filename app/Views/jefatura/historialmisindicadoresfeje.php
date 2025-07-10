@@ -1,79 +1,166 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Historial de Mis Indicadores – Jefatura</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <title>Historial de Mis Indicadores – Jefatura</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <!-- Bootstrap & DataTables CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+  <link href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" rel="stylesheet">
+  <style>
+    html,body{height:100%;margin:0;padding:0;}
+    .container-fluid{display:flex;flex-direction:column;height:100%;}
+    .dataTables_wrapper .dt-buttons{margin-bottom:1rem;}
+    table.dataTable{width:100%!important;}
+    tfoot select{width:100%;box-sizing:border-box;}
+  </style>
 </head>
-
 <body>
-    <?= $this->include('partials/nav') ?>
-    <div class="container py-4">
-        <a href="<?= base_url('jefatura/jefaturadashboard') ?>" class="btn btn-secondary mb-3">
-            &larr; Volver al Dashboard
-        </a>
-        <h1 class="h3 mb-4">Historial de Mis Indicadores</h1>
+  <?= $this->include('partials/nav') ?>
 
-        <?php if (session()->getFlashdata('success')): ?>
-            <div class="alert alert-success"><?= session()->getFlashdata('success') ?></div>
-        <?php endif; ?>
+  <div class="container-fluid py-4 flex-grow-1">
+    <a href="<?= base_url('jefatura/jefaturadashboard') ?>"
+       class="btn btn-secondary mb-3">&larr; Volver al Dashboard</a>
 
-        <?php if (empty($historial)): ?>
-            <div class="alert alert-warning">No hay registros en tu historial.</div>
-        <?php else: ?>
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped align-middle">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Indicador</th>
-                            <th>Meta Valor</th>
-                            <th>Meta Descripción</th>
-                            <th>Tipo Meta</th>
-                            <th>Fórmula</th>
-                            <th>Unidad</th>
-                            <th>Objetivo Proceso</th>
-                            <th>Objetivo Calidad</th>
-                            <th>Tipo Aplicación</th>
-                            <th>Creado en</th>
-                            <th>Periodicidad</th>
-                            <th>Ponderación (%)</th>
-                            <th>Resultado</th>
-                            <th>Comentario</th>
-                            <th>Fecha de Registro</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($historial as $r): ?>
-                            <tr>
-                                <td><strong><?= esc($r['nombre_indicador']) ?></strong></td>
-                                <td><?= esc($r['meta_valor']) ?></td>
-                                <td><?= esc($r['meta_descripcion']) ?></td>
-                                <td><?= esc($r['tipo_meta']) ?></td>
-                                <td><code><?= esc($r['metodo_calculo']) ?></code></td>
-                                <td><?= esc($r['unidad']) ?></td>
-                                <td class="small text-muted"><?= esc($r['objetivo_proceso']) ?></td>
-                                <td class="small text-muted"><?= esc($r['objetivo_calidad']) ?></td>
-                                <td><?= esc($r['tipo_aplicacion']) ?></td>
-                                <td><?= esc($r['created_at']) ?></td>
-                                <td><?= esc($r['periodicidad']) ?></td>
-                                <td><?= esc($r['ponderacion']) ?>%</td>
-                                <td><?= esc($r['resultado_real']) ?></td>
-                                <td><?= esc($r['comentario']) ?></td>
-                                <td><?= esc($r['fecha_registro']) ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        <?php endif; ?>
-    </div>
+    <h1 class="h3 mb-4">Historial de Mis Indicadores</h1>
 
-    <?= $this->include('partials/logout') ?>
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <?php if (session()->getFlashdata('success')): ?>
+      <div class="alert alert-success"><?= session()->getFlashdata('success') ?></div>
+    <?php endif; ?>
+
+    <!-- 1) FILTRO Desde – Hasta -->
+    <form method="get" class="row g-3 mb-4" action="<?= base_url('jefatura/historialmisindicadoresfeje') ?>">
+      <div class="col-auto">
+        <label for="fecha_desde" class="form-label">Desde:</label>
+        <input type="date" id="fecha_desde" name="fecha_desde"
+               class="form-control"
+               value="<?= esc($fecha_desde) ?>">
+      </div>
+      <div class="col-auto">
+        <label for="fecha_hasta" class="form-label">Hasta:</label>
+        <input type="date" id="fecha_hasta" name="fecha_hasta"
+               class="form-control"
+               value="<?= esc($fecha_hasta) ?>">
+      </div>
+      <div class="col-auto align-self-end">
+        <button type="submit" class="btn btn-primary">Filtrar</button>
+      </div>
+    </form>
+
+    <?php if (empty($historial)): ?>
+      <div class="alert alert-warning">No hay registros en tu historial.</div>
+    <?php else: ?>
+      <div class="table-responsive">
+        <table id="historialTable"
+               class="table table-bordered table-striped align-middle nowrap">
+          <thead class="table-dark">
+            <tr>
+              <th>Indicador</th>
+              <th>Meta Valor</th>
+              <th>Meta Descripción</th>
+              <th>Tipo Meta</th>
+              <th>Fórmula</th>
+              <th>Unidad</th>
+              <th>Objetivo Proceso</th>
+              <th>Objetivo Calidad</th>
+              <th>Tipo Aplicación</th>
+              <th>Creado en</th>
+              <th>Periodicidad</th>
+              <th>Ponderación (%)</th>
+              <th>Resultado</th>
+              <th>Comentario</th>
+              <th>Fecha de Registro</th>
+            </tr>
+          </thead>
+          <tfoot>
+            <tr>
+              <!-- 15 <th> para cada columna -->
+              <?php for($i = 0; $i < 15; $i++): ?>
+                <th></th>
+              <?php endfor; ?>
+            </tr>
+          </tfoot>
+          <tbody>
+            <?php foreach($historial as $r): ?>
+            <tr>
+              <td><?= esc($r['nombre_indicador']) ?></td>
+              <td><?= esc($r['meta_valor']) ?></td>
+              <td><?= esc($r['meta_descripcion']) ?></td>
+              <td><?= esc($r['tipo_meta']) ?></td>
+              <td><code><?= esc($r['metodo_calculo']) ?></code></td>
+              <td><?= esc($r['unidad']) ?></td>
+              <td><?= esc($r['objetivo_proceso']) ?></td>
+              <td><?= esc($r['objetivo_calidad']) ?></td>
+              <td><?= esc($r['tipo_aplicacion']) ?></td>
+              <td><?= esc($r['created_at']) ?></td>
+              <td><?= esc($r['periodicidad']) ?></td>
+              <td><?= esc($r['ponderacion']) ?>%</td>
+              <td><?= esc($r['resultado_real']) ?></td>
+              <td><?= esc($r['comentario']) ?: '—' ?></td>
+              <td><?= esc($r['fecha_registro']) ?></td>
+            </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+    <?php endif; ?>
+  </div>
+
+  <?= $this->include('partials/logout') ?>
+
+  <!-- JS: jQuery, Bootstrap, DataTables + Buttons, JSZip -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script 
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
+  </script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+
+  <script>
+  $(document).ready(function(){
+    // columnas a ocultar (0-indexed)
+    var hiddenCols = [6,7,8,9];
+
+    var table = $('#historialTable').DataTable({
+      scrollX: true,
+      dom: 'Bfrtip',
+      buttons: [
+        { extend: 'excelHtml5', title: 'Historial_de_Indicadores_Jefatura' }
+      ],
+      order: [[14,'desc']],    // Fecha de Registro es la columna índice 14
+      columnDefs: [
+        { targets: hiddenCols, visible: false }
+      ],
+      initComplete: function(){
+        var api = this.api();
+        api.columns().every(function(){
+          var idx = this.index();
+          if (hiddenCols.includes(idx)) return;
+
+          var column = this;
+          var $footer = $(column.footer()).empty();
+          var $select = $('<select class="form-select form-select-sm"><option value="">Todos</option></select>')
+            .appendTo($footer)
+            .on('change', function(){
+              var val = $.fn.dataTable.util.escapeRegex($(this).val());
+              column.search(val ? '^'+val+'$' : '', true, false).draw();
+            });
+
+          column.data().unique().sort().each(function(d){
+            if (d != null && d !== '') {
+              var text = $('<div>').html(d).text();
+              $select.append('<option value="'+text+'">'+text+'</option>');
+            }
+          });
+        });
+      }
+    });
+  });
+  </script>
 </body>
-
 </html>
