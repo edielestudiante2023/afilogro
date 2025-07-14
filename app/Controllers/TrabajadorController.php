@@ -218,7 +218,7 @@ class TrabajadorController extends BaseController
             ->first();
 
         if (! $rel) {
-            return redirect()->to('/trabajador/misIndicadores')
+            return redirect()->to('/trabajador/historial_resultados')
                 ->with('error', 'Indicador no asignado a tu perfil.');
         }
 
@@ -236,7 +236,7 @@ class TrabajadorController extends BaseController
             'fecha_registro'      => date('Y-m-d H:i:s'),
         ]);
 
-        return redirect()->to('/trabajador/misIndicadores')
+        return redirect()->to('/trabajador/historial_resultados')
             ->with('success', 'Resultado guardado correctamente.');
     }
 }
