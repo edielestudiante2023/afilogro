@@ -8,9 +8,8 @@
 
     <!-- Bootstrap 5 CSS -->
     <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    >
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet">
     <style>
         /* Opcional: para que la dropdown no expanda celdas */
         td .dropdown-toggle {
@@ -20,6 +19,7 @@
             text-overflow: ellipsis;
             width: 200px;
         }
+
         td .dropdown-menu {
             max-width: 400px;
             white-space: normal;
@@ -32,7 +32,7 @@
 
     <div class="container-fluid py-4">
         <a href="<?= base_url('trabajador/dashboard') ?>"
-           class="btn btn-primary mb-3">
+            class="btn btn-primary mb-3">
             Ir al Dashboard del Trabajador
         </a>
 
@@ -49,7 +49,7 @@
         <?php endif; ?>
 
         <form method="post"
-              action="<?= base_url('trabajador/saveIndicadores') ?>">
+            action="<?= base_url('trabajador/saveIndicadores') ?>">
             <?= csrf_field() ?>
 
             <div class="table-responsive">
@@ -83,12 +83,25 @@
                                 <td><?= esc($i['tipo_meta']) ?></td>
 
                                 <!-- Fórmula estática -->
-                                <td><code><?= esc($i['metodo_calculo']) ?></code></td>
+                                <td>
+                                    <?php if (isset($formulas[$i['id_indicador']])): ?>
+                                        <?php foreach ($formulas[$i['id_indicador']] as $parte): ?>
+                                            <?php if ($parte['tipo_parte'] === 'dato'): ?>
+                                                <span class="text-primary"><?= esc($parte['valor']) ?></span>
+                                            <?php else: ?>
+                                                <span><?= esc($parte['valor']) ?></span>
+                                            <?php endif; ?>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <code><?= esc($i['metodo_calculo']) ?></code>
+                                    <?php endif; ?>
+                                </td>
+
 
                                 <!-- Botón para diligenciar fórmula -->
                                 <td class="text-center">
                                     <a href="<?= base_url('trabajador/formula/' . $i['id_indicador']) ?>"
-                                       class="btn btn-outline-secondary btn-sm">
+                                        class="btn btn-outline-secondary btn-sm">
                                         Diligenciar
                                     </a>
                                 </td>
@@ -108,32 +121,29 @@
                                 <!-- 1) Campo Resultado: vacío -->
                                 <td>
                                     <input
-                                      type="text"
-                                      name="resultado_real[<?= $i['id_indicador_perfil'] ?>]"
-                                      class="form-control resultado-input"
-                                      data-ip="<?= $i['id_indicador_perfil'] ?>"
-                                      placeholder="Ingresa valor"
-                                    />
+                                        type="text"
+                                        name="resultado_real[<?= $i['id_indicador_perfil'] ?>]"
+                                        class="form-control resultado-input"
+                                        data-ip="<?= $i['id_indicador_perfil'] ?>"
+                                        placeholder="Ingresa valor" />
                                 </td>
 
                                 <!-- 2) Campo Comentario -->
                                 <td>
                                     <textarea
-                                      name="comentario[<?= $i['id_indicador_perfil'] ?>]"
-                                      class="form-control comentario-input"
-                                      rows="1"
-                                      placeholder="Opcional..."
-                                    ></textarea>
+                                        name="comentario[<?= $i['id_indicador_perfil'] ?>]"
+                                        class="form-control comentario-input"
+                                        rows="1"
+                                        placeholder="Opcional..."></textarea>
                                 </td>
 
                                 <!-- 3) Botón de Guardar, oculto inicialmente -->
                                 <td class="text-center">
                                     <button
-                                      type="submit"
-                                      class="btn btn-success btn-sm save-btn"
-                                      data-ip="<?= $i['id_indicador_perfil'] ?>"
-                                      style="display:none;"
-                                    >
+                                        type="submit"
+                                        class="btn btn-success btn-sm save-btn"
+                                        data-ip="<?= $i['id_indicador_perfil'] ?>"
+                                        style="display:none;">
                                         Guardar
                                     </button>
                                 </td>
@@ -150,24 +160,23 @@
     <!-- Bootstrap 5 JS Bundle y jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
-    ></script>
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-    $(document).ready(function() {
-        // Mostrar el botón Guardar solo si el trabajador escribe un resultado
-        $('.resultado-input').on('input', function() {
-            var val = $(this).val().trim();
-            var ip  = $(this).data('ip');
-            var btn = $('.save-btn[data-ip="'+ip+'"]');
+        $(document).ready(function() {
+            // Mostrar el botón Guardar solo si el trabajador escribe un resultado
+            $('.resultado-input').on('input', function() {
+                var val = $(this).val().trim();
+                var ip = $(this).data('ip');
+                var btn = $('.save-btn[data-ip="' + ip + '"]');
 
-            if (val !== '' && val !== '0') {
-                btn.show();
-            } else {
-                btn.hide();
-            }
+                if (val !== '' && val !== '0') {
+                    btn.show();
+                } else {
+                    btn.hide();
+                }
+            });
         });
-    });
     </script>
 </body>
 

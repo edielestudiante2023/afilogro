@@ -21,12 +21,6 @@
             padding-bottom: 0;
             line-height: 30px;
         }
-        /* Truncado con ellipse */
-        .truncate {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
     </style>
 </head>
 <body>
@@ -45,20 +39,30 @@
         <table id="indicadorPerfilTable" class="table table-bordered table-striped" style="table-layout: fixed; width:100%">
             <thead class="table-dark">
                 <tr>
-                    <th>Área</th><th>Cargo</th><th>Indicador</th><th>Periodicidad</th>
-                    <th>Meta</th><th>Meta Valor</th><th>Meta Descripción</th><th>Ponderación (%)</th>
-                    <th>Tipo de Meta</th><th>Método de Cálculo</th><th>Unidad</th>
-                    <th>Objetivo Proceso</th><th>Objetivo Calidad</th><th>Tipo Aplicación</th>
-                    <th>Creado en</th><th class="text-center">Acciones</th>
+                    <th>Área</th>
+                    <th>Cargo</th>
+                    <th>Indicador</th>
+                    <th>Periodicidad</th>
+                    <th>Meta</th>
+                    <th>Meta Valor</th>
+                    <th>Meta Descripción</th>
+                    <th>Ponderación (%)</th>
+                    <th>Tipo de Meta</th>
+                    <th class="text-center">Acciones</th>
                 </tr>
             </thead>
             <tfoot>
                 <tr>
-                    <th>Área</th><th>Cargo</th><th>Indicador</th><th>Periodicidad</th>
-                    <th>Meta</th><th>Meta Valor</th><th>Meta Descripción</th><th>Ponderación (%)</th>
-                    <th>Tipo de Meta</th><th>Método de Cálculo</th><th>Unidad</th>
-                    <th>Objetivo Proceso</th><th>Objetivo Calidad</th><th>Tipo Aplicación</th>
-                    <th>Creado en</th><th></th>
+                    <th>Área</th>
+                    <th>Cargo</th>
+                    <th>Indicador</th>
+                    <th>Periodicidad</th>
+                    <th>Meta</th>
+                    <th>Meta Valor</th>
+                    <th>Meta Descripción</th>
+                    <th>Ponderación (%)</th>
+                    <th>Tipo de Meta</th>
+                    <th></th>
                 </tr>
             </tfoot>
             <tbody>
@@ -73,20 +77,6 @@
                     <td><?= esc($item['meta_descripcion']) ?></td>
                     <td><?= esc($item['ponderacion']) ?></td>
                     <td><?= esc($item['tipo_meta']) ?></td>
-                    <td><?= esc($item['metodo_calculo']) ?></td>
-                    <td><?= esc($item['unidad']) ?></td>
-
-                    <!-- Sólo una línea visible + tooltip -->
-                    <td class="truncate"
-                        data-bs-toggle="tooltip"
-                        data-bs-placement="top"
-                        title="<?= esc($item['objetivo_proceso']) ?>">
-                        <?= esc($item['objetivo_proceso']) ?>
-                    </td>
-
-                    <td><?= esc($item['objetivo_calidad']) ?></td>
-                    <td><?= esc($item['tipo_aplicacion']) ?></td>
-                    <td><?= esc($item['created_at']) ?></td>
                     <td class="text-center">
                         <a href="<?= base_url('indicadores_perfil/edit/' . $item['id_indicador_perfil']) ?>" class="btn btn-sm btn-warning">Editar</a>
                         <a href="<?= base_url('indicadores_perfil/delete/' . $item['id_indicador_perfil']) ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Deseas eliminar esta asignación?')">Eliminar</a>
@@ -108,29 +98,23 @@
     <script>
     $(function() {
         // Inicializa DataTable con select en footer
-        const table = $('#indicadorPerfilTable').DataTable({
+        $('#indicadorPerfilTable').DataTable({
             responsive: true,
             autoWidth: false,
             language: { url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json" },
             initComplete: function() {
                 this.api().columns().every(function() {
-                    const col = this;
-                    const select = $('<select class="form-select form-select-sm"><option value="">Todos</option></select>')
+                    var col = this;
+                    var select = $('<select class="form-select form-select-sm"><option value="">Todos</option></select>')
                         .appendTo($(col.footer()).empty())
                         .on('change', function() {
                             col.search($.fn.dataTable.util.escapeRegex(this.value) ? '^'+this.value+'$' : '', true, false).draw();
                         });
                     col.data().unique().sort().each(function(d) {
-                        if (d) select.append(`<option value="${d}">${d}</option>`);
+                        if (d) select.append('<option value="'+d+'">'+d+'</option>');
                     });
                 });
             }
-        });
-
-        // Tooltips delegados (para que funcionen dentro de DataTables)
-        $('body').tooltip({
-            selector: '[data-bs-toggle="tooltip"]',
-            trigger: 'hover'
         });
     });
     </script>

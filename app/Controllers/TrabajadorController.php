@@ -53,26 +53,36 @@ class TrabajadorController extends BaseController
         $userId = $session->get('id_users');
         $perfil = $session->get('id_perfil_cargo');
 
-        // Obtener indicadores con campos del modelo IndicadorModel
+        // 1) Obtener indicadores para el perfil
         $items   = $this->ipModel->getIndicadoresPorPerfil($perfil);
         $periodo = date('Y-m');
 
-        // Historial del periodo actual
+        // 2) Historial del periodo actual
         $history = $this->histModel
             ->where('id_usuario', $userId)
             ->where('periodo', $periodo)
             ->findAll();
-
         $histMap = [];
         foreach ($history as $h) {
             $histMap[$h['id_indicador_perfil']] = $h;
         }
 
+        // 3) Cargar las partes de fórmula para cada indicador
+        $formulas = [];
+        foreach ($items as $item) {
+            $formulas[$item['id_indicador']] = $this->partesModel
+                ->where('id_indicador', $item['id_indicador'])
+                ->orderBy('orden', 'ASC')
+                ->findAll();
+        }
+
+        // 4) Enviar todo a la vista
         return view('trabajador/mis_indicadores', [
-            'items'    => $items,
-            'histMap'  => $histMap,
-            'periodo'  => $periodo,
-            'userId'   => $userId, // <-- para enviar a la vista y construir la URL de diligenciar
+            'items'     => $items,
+            'histMap'   => $histMap,
+            'periodo'   => $periodo,
+            'userId'    => $userId,
+            'formulas'  => $formulas,
         ]);
     }
 
@@ -123,44 +133,66 @@ class TrabajadorController extends BaseController
     /**
      * Muestra historial de resultados con datos extendidos del indicador
      */
-    public function historialResultados()
-    {
-        $session    = session();
-        $userId     = $session->get('id_users');
-        $fechaDesde = $this->request->getGet('fecha_desde') ?? date('Y-m-01');
-        $fechaHasta = $this->request->getGet('fecha_hasta') ?? date('Y-m-d');
+ public function historialResultados()
+{
+    $session    = session();
+    $userId     = $session->get('id_users');
+    $fechaDesde = $this->request->getGet('fecha_desde') ?? date('Y-m-01');
+    $fechaHasta = $this->request->getGet('fecha_hasta') ?? date('Y-m-d');
 
-        $historial = $this->histModel
-            ->select([
-                'historial_indicadores.*',
-                'indicadores.nombre           AS nombre_indicador',
-                'indicadores.meta_valor',
-                'indicadores.meta_descripcion',
-                'indicadores.tipo_meta',
-                'indicadores.metodo_calculo',
-                'indicadores.unidad',
-                'indicadores.objetivo_proceso',
-                'indicadores.objetivo_calidad',
-                'indicadores.tipo_aplicacion',
-                'indicadores.created_at',
-                'indicadores.periodicidad      AS periodicidad',      // ← AQUÍ
-                'indicadores_perfil.meta',
-                'indicadores_perfil.ponderacion',
-            ])
-            ->join('indicadores_perfil', 'indicadores_perfil.id_indicador_perfil = historial_indicadores.id_indicador_perfil')
-            ->join('indicadores',         'indicadores.id_indicador = indicadores_perfil.id_indicador')
-            ->where('historial_indicadores.id_usuario', $userId)
-            ->where('historial_indicadores.fecha_registro >=', $fechaDesde . ' 00:00:00')
-            ->where('historial_indicadores.fecha_registro <=', $fechaHasta . ' 23:59:59')
-            ->orderBy('historial_indicadores.fecha_registro', 'DESC')
-            ->findAll();
+    // 1) Traer el historial
+    
+    $historial = $this->histModel
+        ->select([
+            'historial_indicadores.*',
+            'indicadores_perfil.id_indicador AS id_indicador',
+            'indicadores.nombre           AS nombre_indicador',
+            'indicadores.meta_valor',
+            'indicadores.meta_descripcion',
+            'indicadores.tipo_meta',
+            'indicadores.metodo_calculo',
+            'indicadores.unidad',
+            'indicadores.objetivo_proceso',
+            'indicadores.objetivo_calidad',
+            'indicadores.tipo_aplicacion',
+            'indicadores.created_at',
+            'indicadores.periodicidad      AS periodicidad',
+            'indicadores_perfil.meta',
+            'indicadores_perfil.ponderacion',
+        ])
+        ->join('indicadores_perfil', 'indicadores_perfil.id_indicador_perfil = historial_indicadores.id_indicador_perfil')
+        ->join('indicadores',         'indicadores.id_indicador = indicadores_perfil.id_indicador')
+        ->where('historial_indicadores.id_usuario', $userId)
+        ->where('historial_indicadores.fecha_registro >=', $fechaDesde . ' 00:00:00')
+        ->where('historial_indicadores.fecha_registro <=', $fechaHasta . ' 23:59:59')
+        ->orderBy('historial_indicadores.fecha_registro', 'DESC')
+        ->findAll();
 
-        return view('trabajador/historial_resultados', [
-            'historial'   => $historial,
-            'fecha_desde' => $fechaDesde,
-            'fecha_hasta' => $fechaHasta,
-        ]);
+    // 2) Precargar partes de fórmula para cada indicador del historial
+    $formulasHist = [];
+    foreach ($historial as $r) {
+        $id = $r['id_indicador'];
+        if (! isset($formulasHist[$id])) {
+            $formulasHist[$id] = $this->partesModel
+                ->where('id_indicador', $id)
+                ->orderBy('orden', 'ASC')
+                ->findAll();
+        }
     }
+
+
+
+
+    // 3) Enviar todo a la vista
+    return view('trabajador/historial_resultados', [
+        'historial'    => $historial,
+        'fecha_desde'  => $fechaDesde,
+        'fecha_hasta'  => $fechaHasta,
+        'formulasHist' => $formulasHist,
+    ]);
+}
+
+
 
     /**
      * Guarda en historial el resultado calculado por fórmula

@@ -5,11 +5,31 @@
     <meta charset="UTF-8">
     <title>Asignar Indicador a Perfil – Afilogro</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap 5 CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    >
+    <!-- Select2 CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
+      rel="stylesheet"
+    >
+    <style>
+      /* Para que Select2 luzca a 100% ancho dentro de Bootstrap */
+      .select2-container .select2-selection--single {
+        height: calc(1.5em + .75rem + 2px);
+        padding: .375rem .75rem;
+      }
+      .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 1.5em;
+      }
+    </style>
 </head>
 
 <body>
-<?= $this->include('partials/nav') ?>
+    <?= $this->include('partials/nav') ?>
 
     <div class="container py-4">
         <h1 class="h4 mb-4">Asignar Nuevo Indicador a Perfil</h1>
@@ -26,11 +46,19 @@
             <?= csrf_field() ?>
 
             <div class="mb-3">
-                <label class="form-label">Cargo / Perfil</label>
-                <select name="id_perfil_cargo" id="perfilSelect" class="form-select" required>
+                <label for="perfilSelect" class="form-label">Cargo / Perfil</label>
+                <select
+                  name="id_perfil_cargo"
+                  id="perfilSelect"
+                  class="form-select"
+                  required
+                >
                     <option value="">-- Selecciona un cargo --</option>
                     <?php foreach ($perfiles as $p): ?>
-                        <option value="<?= $p['id_perfil_cargo'] ?>" data-area="<?= esc($p['area']) ?>">
+                        <option
+                          value="<?= $p['id_perfil_cargo'] ?>"
+                          data-area="<?= esc($p['area']) ?>"
+                        >
                             <?= esc($p['nombre_cargo']) ?>
                         </option>
                     <?php endforeach; ?>
@@ -38,22 +66,36 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Área</label>
-                <select name="area" id="areaSelect" class="form-select" required>
+                <label for="areaSelect" class="form-label">Área</label>
+                <select
+                  name="area"
+                  id="areaSelect"
+                  class="form-select"
+                  required
+                >
                     <option value="">-- Selecciona un área --</option>
                     <?php foreach ($areas as $a): ?>
-                        <option value="<?= $a['nombre_area'] ?>"><?= esc($a['nombre_area']) ?></option>
+                        <option value="<?= esc($a['nombre_area']) ?>">
+                            <?= esc($a['nombre_area']) ?>
+                        </option>
                     <?php endforeach; ?>
                 </select>
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Indicador</label>
-                <select name="id_indicador" class="form-select" required>
+                <label for="indicadorSelect" class="form-label">Indicador</label>
+                <select
+                  name="id_indicador"
+                  id="indicadorSelect"
+                  class="form-select"
+                  required
+                >
                     <option value="">-- Selecciona un indicador --</option>
                     <?php foreach ($indicadores as $ind): ?>
                         <option value="<?= $ind['id_indicador'] ?>">
-                            <?= esc($ind['nombre']) ?> - <?= esc($ind['unidad']) ?> (<?= esc($ind['tipo_meta']) ?>)
+                            <?= esc($ind['nombre']) ?>
+                            — <?= esc($ind['unidad']) ?>
+                            (<?= esc($ind['tipo_meta']) ?>)
                         </option>
                     <?php endforeach; ?>
                 </select>
@@ -61,21 +103,41 @@
 
             <div class="mb-3">
                 <label class="form-label">Periodicidad</label>
-                <input type="text" name="periodicidad" class="form-control" value="<?= old('periodicidad') ?>" required>
+                <input
+                  type="text"
+                  name="periodicidad"
+                  class="form-control"
+                  value="<?= old('periodicidad') ?>"
+                  required
+                >
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Meta (texto)</label>
-                <input type="text" name="meta" class="form-control" value="<?= old('meta') ?>" required>
+                <input
+                  type="text"
+                  name="meta"
+                  class="form-control"
+                  value="<?= old('meta') ?>"
+                  required
+                >
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Ponderación (%)</label>
-                <input type="number" name="ponderacion" class="form-control" min="0" max="100" value="<?= old('ponderacion') ?>" required>
+                <input
+                  type="number"
+                  name="ponderacion"
+                  class="form-control"
+                  min="0" max="100"
+                  value="<?= old('ponderacion') ?>"
+                  required
+                >
             </div>
 
             <div class="alert alert-info">
-                <strong>Nota:</strong> El <em>valor meta</em>, la <em>unidad</em> y el <em>método de cálculo</em> ya están definidos en el indicador y se mostrarán automáticamente al consultarlo.
+                <strong>Nota:</strong> El <em>valor meta</em>, la <em>unidad</em> y el <em>método de cálculo</em>
+                ya están definidos en el indicador y se mostrarán automáticamente al consultarlo.
             </div>
 
             <div class="d-flex justify-content-start">
@@ -85,15 +147,32 @@
         </form>
     </div>
 
-    <script>
-        document.getElementById('perfilSelect').addEventListener('change', function() {
-            const selected = this.options[this.selectedIndex];
-            const area = selected.getAttribute('data-area') || '';
-            document.getElementById('areaSelect').value = area;
-        });
-    </script>
+    <!-- jQuery (requerido por Select2) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap Bundle JS -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+    ></script>
+    <!-- Select2 JS -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"
+    ></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    $(document).ready(function() {
+        // Inicializar Select2 en cada <select>
+        $('#perfilSelect, #areaSelect, #indicadorSelect').select2({
+            placeholder: 'Seleccione una opción',
+            width: '100%'
+        });
+
+        // Al cambiar cargo, actualizar área
+        $('#perfilSelect').on('change', function() {
+            var area = $(this).find('option:selected').data('area') || '';
+            $('#areaSelect').val(area).trigger('change');
+        });
+    });
+    </script>
 </body>
 
 </html>

@@ -53,18 +53,28 @@ public function listIndicadorPerfil()
         return redirect()->to('/indicadores_perfil')->with('success', 'Asignación creada correctamente.');
     }
 
-    public function editIndicadorPerfil($id)
-    {
-        $perfilCargoModel = new \App\Models\PerfilCargoModel();
-        $areaModel = new \App\Models\AreaModel();
+   public function editIndicadorPerfil($id)
+{
+    $perfilCargoModel = new \App\Models\PerfilCargoModel();
+    $areaModel        = new \App\Models\AreaModel();
 
-        $data['registro'] = $this->indicadorPerfilModel->find($id);
-        $data['indicadores'] = $this->indicadorModel->findAll();
-        $data['perfiles'] = $perfilCargoModel->findAll();
-        $data['areas'] = $areaModel->where('estado_area', 'activa')->findAll();
+    // 1) Cargo la asignación original
+    $registro = $this->indicadorPerfilModel->find($id);
 
-        return view('management/edit_indicador_perfil', $data);
-    }
+    // 2) Busco el perfil para extraer su área
+    $perfil = $perfilCargoModel->find($registro['id_perfil_cargo']);
+    // Asigno el área al registro
+    $registro['area'] = $perfil['area'];
+
+    // 3) Datos para los selects
+    $data['registro']    = $registro;
+    $data['indicadores'] = $this->indicadorModel->findAll();
+    $data['perfiles']    = $perfilCargoModel->findAll();
+    $data['areas']       = $areaModel->where('estado_area', 'activa')->findAll();
+
+    return view('management/edit_indicador_perfil', $data);
+}
+
 
 
 

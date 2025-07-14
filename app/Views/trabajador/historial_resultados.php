@@ -4,16 +4,22 @@
   <meta charset="UTF-8">
   <title>Historial de Resultados – Afilogro</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <!-- CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
   <link href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" rel="stylesheet">
+
   <style>
-    html,body{height:100%;margin:0;padding:0}
-    .container-fluid{display:flex;flex-direction:column;height:100%}
-    .dataTables_wrapper .dt-buttons{margin-bottom:1rem}
-    table.dataTable{width:100%!important}
-    tfoot select{width:100%;box-sizing:border-box}
+    html, body { height:100%; margin:0; padding:0; }
+    .container-fluid { display:flex; flex-direction:column; height:100%; }
+    .dataTables_wrapper .dt-buttons { margin-bottom:1rem; }
+    table.dataTable { width:100% !important; table-layout: fixed; }
+    /* ancho aprox 20 caracteres */
+    table.dataTable th.col-formula, table.dataTable td.col-formula {
+      width:20ch; white-space: nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    tfoot select { width:100%; box-sizing:border-box; }
   </style>
 </head>
 <body>
@@ -24,8 +30,9 @@
        class="btn btn-secondary mb-3">&larr; Volver al Dashboard</a>
     <h1 class="h3 mb-4">Historial de Resultados de Indicadores</h1>
 
-    <!-- Filtro Desde/Hasta -->
-    <form method="get" class="row g-3 mb-4" action="<?= base_url('trabajador/historialResultados') ?>">
+    <!-- filtro -->
+    <form method="get" class="row g-3 mb-4"
+          action="<?= base_url('trabajador/historialResultados') ?>">
       <div class="col-auto">
         <label for="fecha_desde" class="form-label">Desde:</label>
         <input type="date" id="fecha_desde" name="fecha_desde"
@@ -41,18 +48,19 @@
       </div>
     </form>
 
-    <?php if (empty($historial)): ?>
+    <?php if(empty($historial)): ?>
       <div class="alert alert-warning">No hay historial disponible.</div>
     <?php else: ?>
       <div class="table-responsive flex-grow-1">
-        <table id="historialTable" class="table table-bordered table-striped align-middle nowrap">
+        <table id="historialTable"
+               class="table table-bordered table-striped align-middle nowrap dataTable">
           <thead class="table-dark">
             <tr>
               <th>Indicador</th>
               <th>Meta Valor</th>
               <th>Meta Descripción</th>
               <th>Tipo Meta</th>
-              <th>Fórmula</th>
+              <th class="col-formula">Fórmula</th>
               <th>Unidad</th>
               <th>Objetivo Proceso</th>
               <th>Objetivo Calidad</th>
@@ -67,20 +75,64 @@
             </tr>
           </thead>
           <tfoot>
-            <tr>
-              <?php for ($i = 0; $i < 16; $i++): ?>
-                <th></th>
-              <?php endfor; ?>
-            </tr>
+            <tr><?php for($i=0;$i<16;$i++): ?><th></th><?php endfor; ?></tr>
           </tfoot>
           <tbody>
-            <?php foreach ($historial as $r): ?>
+            <?php foreach($historial as $r): ?>
             <tr>
-              <td><?= esc($r['nombre_indicador']) ?></td>
+              <!-- Tooltip en Indicador -->
+              <td data-bs-toggle="tooltip"
+                  data-bs-placement="top"
+                  title="<?= esc($r['nombre_indicador']) ?>">
+                <?= esc($r['nombre_indicador']) ?>
+              </td>
               <td><?= esc($r['meta_valor']) ?></td>
-              <td><?= esc($r['meta_descripcion']) ?></td>
+
+              <!-- Tooltip en Meta Descripción -->
+              <td data-bs-toggle="tooltip"
+                  data-bs-placement="top"
+                  title="<?= esc($r['meta_descripcion']) ?>">
+                <?= esc($r['meta_descripcion']) ?>
+              </td>
+
               <td><?= esc($r['tipo_meta']) ?></td>
-              <td><code><?= esc($r['metodo_calculo']) ?></code></td>
+
+              <!-- Columna Fórmula con tooltip en el texto original -->
+              <td class="col-formula">
+                <div class="mb-1"
+                     data-bs-toggle="tooltip"
+                     data-bs-placement="top"
+                     title="<?= esc(implode('', array_column($formulasHist[$r['id_indicador']] ?? [], 'valor'))) ?>">
+                  <small class="text-muted">Original:</small><br>
+                  <?php
+                    $orig = $formulasHist[$r['id_indicador']] ?? [];
+                    if(!empty($orig)):
+                      echo '<code>'.esc(implode('', array_column($orig,'valor'))).'</code>';
+                    else:
+                      echo '<code>'.esc($r['metodo_calculo']).'</code>';
+                    endif;
+                  ?>
+                </div>
+                <div>
+                  <small class="text-muted">Operac.:</small><br>
+                  <?php
+                    $json   = json_decode($r['valores_json'],true);
+                    $parts  = $formulasHist[$r['id_indicador']] ?? [];
+                    if(isset($json['formula_partes']) && $parts):
+                      foreach($parts as $p):
+                        if($p['tipo_parte']==='dato'):
+                          echo '<span class="text-primary">'.esc($json['formula_partes'][$p['valor']]??'').'</span>';
+                        else:
+                          echo '<span>'.esc($p['valor']).'</span>';
+                        endif;
+                      endforeach;
+                    else:
+                      echo '<em class="text-muted">Dato ingresado directamente</em>';
+                    endif;
+                  ?>
+                </div>
+              </td>
+
               <td><?= esc($r['unidad']) ?></td>
               <td><?= esc($r['objetivo_proceso']) ?></td>
               <td><?= esc($r['objetivo_calidad']) ?></td>
@@ -90,8 +142,14 @@
               <td><?= esc($r['meta']) ?></td>
               <td><?= esc($r['ponderacion']) ?>%</td>
               <td><?= esc($r['resultado_real']) ?></td>
-              <td><?= esc($r['comentario']) ?: '—' ?></td>
-              <td><?= esc($r['fecha_registro']) ?></td>
+              <td><?= esc($r['comentario'])?:'—' ?></td>
+
+              <!-- Tooltip en Fecha de Registro -->
+              <td data-bs-toggle="tooltip"
+                  data-bs-placement="top"
+                  title="<?= esc($r['fecha_registro']) ?>">
+                <?= esc($r['fecha_registro']) ?>
+              </td>
             </tr>
             <?php endforeach; ?>
           </tbody>
@@ -113,45 +171,19 @@
   <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
 
   <script>
-  $(document).ready(function() {
-    var hiddenCols = [6,7,8,9,11]; // índices de las columnas a ocultar
+    // Inicializa tooltips de Bootstrap
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+      new bootstrap.Tooltip(el);
+    });
 
-    var table = $('#historialTable').DataTable({
+    // DataTables
+    $('#historialTable').DataTable({
       scrollX: true,
       dom: 'Bfrtip',
-      buttons: [
-        { extend: 'excelHtml5', title: 'Historial_Resultados' }
-      ],
-      order: [[15, 'desc']],     // Fecha de Registro DESC
-      columnDefs: [
-        { targets: hiddenCols, visible: false }
-      ],
-      initComplete: function() {
-        var api = this.api();
-
-        api.columns().every(function() {
-          var colIdx = this.index();
-          if (hiddenCols.includes(colIdx)) return;
-
-          var $footerCell = $(this.footer()).empty();
-          var $select     = $('<select class="form-select form-select-sm"><option value="">Todos</option></select>')
-            .appendTo($footerCell)
-            .on('change', function(){
-              var val = $.fn.dataTable.util.escapeRegex($(this).val());
-              api.column(colIdx).search(val ? '^'+val+'$' : '', true, false).draw();
-            });
-
-          this.data().unique().sort().each(function(d){
-            if (d != null && d !== '') {
-              // extrae texto si viene con HTML
-              var text = $('<div>').html(d).text();
-              $select.append('<option value="'+text+'">'+text+'</option>');
-            }
-          });
-        });
-      }
+      buttons: [{ extend: 'excelHtml5', title: 'Historial_Resultados' }],
+      order: [[15, 'desc']],
+      columnDefs: [{ targets: [6,7,8,9,11], visible: false }]
     });
-  });
   </script>
 </body>
 </html>
