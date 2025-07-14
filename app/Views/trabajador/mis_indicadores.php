@@ -61,13 +61,13 @@
                             <th>Meta Descripción</th>
                             <th>Tipo de Meta</th>
                             <th>Fórmula</th>
+                            <th>Calcular</th>
                             <th>Unidad</th>
                             <th>Objetivo Proceso</th>
                             <th>Objetivo Calidad</th>
                             <th>Tipo Aplicación</th>
                             <th>Creado en</th>
                             <th>Periodicidad</th>
-                            <!-- <th>Meta (texto)</th> -->
                             <th>Ponderación (%)</th>
                             <th>Resultado</th>
                             <th>Comentario</th>
@@ -81,7 +81,18 @@
                                 <td><?= esc($i['meta_valor']) ?></td>
                                 <td><?= esc($i['meta_descripcion']) ?></td>
                                 <td><?= esc($i['tipo_meta']) ?></td>
+
+                                <!-- Fórmula estática -->
                                 <td><code><?= esc($i['metodo_calculo']) ?></code></td>
+
+                                <!-- Botón para diligenciar fórmula -->
+                                <td class="text-center">
+                                    <a href="<?= base_url('trabajador/formula/' . $i['id_indicador']) ?>"
+                                       class="btn btn-outline-secondary btn-sm">
+                                        Diligenciar
+                                    </a>
+                                </td>
+
                                 <td><?= esc($i['unidad']) ?></td>
                                 <td class="small text-muted">
                                     <?= esc($i['objetivo_proceso']) ?>
@@ -92,7 +103,6 @@
                                 <td><?= esc($i['tipo_aplicacion']) ?></td>
                                 <td><?= esc($i['created_at']) ?></td>
                                 <td><?= esc($i['periodicidad']) ?></td>
-                               <!--  <td><?= esc($i['meta']) ?></td> -->
                                 <td><?= esc($i['ponderacion']) ?>%</td>
 
                                 <!-- 1) Campo Resultado: vacío -->
@@ -116,7 +126,7 @@
                                     ></textarea>
                                 </td>
 
-                                <!-- 3) Botón por fila, oculto inicialmente -->
+                                <!-- 3) Botón de Guardar, oculto inicialmente -->
                                 <td class="text-center">
                                     <button
                                       type="submit"
@@ -145,13 +155,12 @@
 
     <script>
     $(document).ready(function() {
-        // Cada vez que cambie un input de resultado...
+        // Mostrar el botón Guardar solo si el trabajador escribe un resultado
         $('.resultado-input').on('input', function() {
             var val = $(this).val().trim();
             var ip  = $(this).data('ip');
             var btn = $('.save-btn[data-ip="'+ip+'"]');
 
-            // Mostrar botón sólo si hay algo escrito (y no es "0")
             if (val !== '' && val !== '0') {
                 btn.show();
             } else {

@@ -168,4 +168,52 @@ class IndicadorController extends BaseController
             'resultado' => $resultado,
         ]);
     }
+
+    public function diligenciarFormulaTrabajador($id)
+{
+    $indicador = $this->indicadorModel->find($id);
+    if (! $indicador) throw new PageNotFoundException();
+
+    $partesModel = new PartesFormulaModel();
+    $partes      = $partesModel->getPartesPorIndicador($id);
+
+    return view('trabajador/fill_formula_trabajador', [
+        'indicador' => $indicador,
+        'partes'    => $partes,
+    ]);
+}
+
+public function evaluarFormulaTrabajadorPost($id)
+{
+    $indicador   = $this->indicadorModel->find($id);
+    if (! $indicador) throw new PageNotFoundException();
+
+    $partesModel = new PartesFormulaModel();
+    $partes      = $partesModel->getPartesPorIndicador($id);
+    $inputs      = $this->request->getPost('dato');
+
+    $formula = '';
+    $valoresLimpios = [];
+
+    foreach ($partes as $p) {
+        if ($p['tipo_parte'] === 'dato') {
+            $clave = $p['valor'];
+            $val   = isset($inputs[$clave]) ? floatval($inputs[$clave]) : 0;
+            $valoresLimpios[$clave] = $val;
+            $formula .= " {$val}";
+        } else {
+            $formula .= " {$p['valor']}";
+        }
+    }
+
+    $resultado = eval("return {$formula};");
+
+    return view('trabajador/confirmar_formula_trabajador', [
+        'indicador'       => $indicador,
+        'formula'         => $formula,
+        'resultado'       => $resultado,
+        'formula_partes'  => $valoresLimpios,
+    ]);
+}
+
 }

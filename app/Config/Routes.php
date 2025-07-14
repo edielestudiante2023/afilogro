@@ -172,5 +172,9 @@ $routes->post( 'jefatura/guardarIndicadoresDeEquipo', 'JefaturaController::guard
 $routes->get('auditoria', 'AuditoriaController::index');
 $routes->get('auditoria', 'AuditoriaController::listAuditoria');
 
+$routes->get('trabajador/formula/(:num)', 'IndicadorController::diligenciarFormulaTrabajador/$1');
+$routes->post('trabajador/formula/evaluar/(:num)', 'IndicadorController::evaluarFormulaTrabajadorPost/$1');
+// Al final de tu grupo de rutas de “trabajador”:
+$routes->post('trabajador/formula/guardar/(:num)', 'TrabajadorController::guardarFormula/$1');
 
 
