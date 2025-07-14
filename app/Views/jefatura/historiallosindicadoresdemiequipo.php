@@ -23,6 +23,8 @@
     .dataTables_wrapper .dt-buttons { margin-bottom:1rem; }
     table.dataTable { width:100% !important; }
     tfoot select { width:100%; box-sizing:border-box; }
+    /* ancho fijo para la columna fórmula */
+    .col-formula { width:20ch; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     td .dropdown-toggle { max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     td .dropdown-menu { max-width:400px; white-space:normal; }
   </style>
@@ -84,7 +86,7 @@
               <th>Meta Valor</th>
               <th>Meta Descripción</th>
               <th>Tipo Meta</th>
-              <th>Fórmula</th>
+              <th class="col-formula">Fórmula</th>
               <th>Unidad</th>
               <th>Objetivo Proceso</th>
               <th>Objetivo Calidad</th>
@@ -112,7 +114,45 @@
               <td><?= esc($r['meta_valor']) ?></td>
               <td><?= esc($r['meta_descripcion']) ?></td>
               <td><?= esc($r['tipo_meta']) ?></td>
-              <td><code><?= esc($r['metodo_calculo']) ?></code></td>
+
+              <!-- Columna Fórmula ajustada -->
+              <td class="col-formula">
+                <div class="mb-1"
+                     data-bs-toggle="tooltip"
+                     data-bs-placement="top"
+                     title="<?= esc(implode('', array_column($formulasHist[$r['id_indicador']] ?? [], 'valor'))) ?>">
+                  <small class="text-muted">Original:</small><br>
+                  <?php
+                    $orig = $formulasHist[$r['id_indicador']] ?? [];
+                    if (! empty($orig)):
+                      echo '<code>'.esc(implode('', array_column($orig,'valor'))).'</code>';
+                    else:
+                      echo '<code>'.esc($r['metodo_calculo']).'</code>';
+                    endif;
+                  ?>
+                </div>
+                <div>
+                  <small class="text-muted">Operac.:</small><br>
+                  <?php
+                    $json   = json_decode($r['valores_json'], true);
+                    $parts  = $formulasHist[$r['id_indicador']] ?? [];
+                    if (isset($json['formula_partes']) && $parts):
+                      foreach ($parts as $p):
+                        if ($p['tipo_parte'] === 'dato'):
+                          echo '<span class="text-primary">'
+                               . esc($json['formula_partes'][$p['valor']] ?? '')
+                               . '</span>';
+                        else:
+                          echo '<span>'.esc($p['valor']).'</span>';
+                        endif;
+                      endforeach;
+                    else:
+                      echo '<em class="text-muted">Dato ingresado directamente</em>';
+                    endif;
+                  ?>
+                </div>
+              </td>
+
               <td><?= esc($r['unidad']) ?></td>
               <td>
                 <div class="dropdown">
@@ -137,7 +177,7 @@
                 </div>
               </td>
               <td><?= esc($r['tipo_aplicacion']) ?></td>
-              <td><?= esc($r['created_at']) ?></td>
+              <td><?= esc($r['creado_en']) ?></td>
               <td><?= esc($r['periodicidad']) ?></td>
               <td><?= esc($r['ponderacion']) ?>%</td>
               <td><?= esc($r['resultado_real']) ?></td>
@@ -172,8 +212,7 @@
 
   <script>
   $(document).ready(function() {
-    // Índices 1-indexed: el 7º th es Objetivo Proceso → 0-indexed = 7
-    var hiddenCols = [7,8,9,10,11]; // ObjProc, ObjCal, TipoAp, CreadoEn, Periodicidad-texto
+    var hiddenCols = [7,8,9,10,11]; // Objetivos y campos extras
 
     var table = $('#historialTable').DataTable({
       scrollX: true,
@@ -181,10 +220,8 @@
       buttons: [
         { extend: 'excelHtml5', title: 'Historial_Equipo' }
       ],
-      order: [[15, 'desc']],  // Fecha de Registro (índice 15, 0-based)
-      columnDefs: [
-        { targets: hiddenCols, visible: false }
-      ],
+      order: [[15, 'desc']],
+      columnDefs: [ { targets: hiddenCols, visible: false } ],
       initComplete: function() {
         var api = this.api();
         api.columns().every(function() {

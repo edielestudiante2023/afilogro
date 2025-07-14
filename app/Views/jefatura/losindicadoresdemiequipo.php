@@ -16,6 +16,7 @@
     .bg-lavanda {
       background-color: #EDE7F6 !important;
     }
+
     .bg-lavanda .form-control {
       background-color: #EDE7F6 !important;
       border-color: #D1C4E9 !important;
@@ -76,12 +77,20 @@
           </thead>
           <tfoot>
             <tr>
-              <th><select class="form-select form-select-sm"><option value="">Todos</option></select></th>
-              <th><select class="form-select form-select-sm"><option value="">Todos</option></select></th>
+              <th><select class="form-select form-select-sm">
+                  <option value="">Todos</option>
+                </select></th>
+              <th><select class="form-select form-select-sm">
+                  <option value="">Todos</option>
+                </select></th>
               <th></th>
-              <th><select class="form-select form-select-sm"><option value="">Todos</option></select></th>
+              <th><select class="form-select form-select-sm">
+                  <option value="">Todos</option>
+                </select></th>
               <th></th>
-              <th><select class="form-select form-select-sm"><option value="">Todos</option></select></th>
+              <th><select class="form-select form-select-sm">
+                  <option value="">Todos</option>
+                </select></th>
               <th></th>
               <th></th>
               <th></th>
@@ -94,7 +103,20 @@
                 <td><?= esc($item['nombre_indicador']) ?></td>
                 <td><?= esc($item['meta_valor']) ?></td>
                 <td><?= esc($item['tipo_meta']) ?></td>
-                <td><code><?= esc($item['metodo_calculo']) ?></code></td>
+                <td class="col-formula">
+                  <?php if (isset($formulas[$item['id_indicador']])): ?>
+                    <?php foreach ($formulas[$item['id_indicador']] as $parte): ?>
+                      <?php if ($parte['tipo_parte'] === 'dato'): ?>
+                        <span class="text-primary"><?= esc($parte['valor']) ?></span>
+                      <?php else: ?>
+                        <span><?= esc($parte['valor']) ?></span>
+                      <?php endif; ?>
+                    <?php endforeach; ?>
+                  <?php else: ?>
+                    <code><?= esc($item['metodo_calculo']) ?></code>
+                  <?php endif; ?>
+                </td>
+
                 <td><?= esc($item['unidad']) ?></td>
                 <td class="bg-lavanda">
                   <input
@@ -137,7 +159,9 @@
   <script>
     $(document).ready(function() {
       // Inicializa flatpickr
-      $('.datepicker').flatpickr({ dateFormat: 'Y-m-d' });
+      $('.datepicker').flatpickr({
+        dateFormat: 'Y-m-d'
+      });
 
       // DataTable con scrollX y filtros select
       $('#edicionTable').DataTable({
