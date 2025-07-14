@@ -164,66 +164,75 @@ class JefaturaController extends BaseController
     /**
      * Edición rápida de indicadores del equipo
      */
-   public function losIndicadoresDeMiEquipo()
-{
-    // 1) Filtros de rango de fecha
-    $fechaDesde = $this->request->getGet('fecha_desde') ?? date('Y-m-01');
-    $fechaHasta = $this->request->getGet('fecha_hasta') ?? date('Y-m-d');
+    public function losIndicadoresDeMiEquipo()
+    {
+        // 1) Filtros de rango de fecha
+        $fechaDesde = $this->request->getGet('fecha_desde') ?? date('Y-m-01');
+        $fechaHastaRaw = $this->request->getGet('fecha_hasta') ?? date('Y-m-d');
+        $fechaHasta = $fechaHastaRaw . ' 23:59:59';
 
-    // 2) IDs de subordinados + el jefe
-    $jefeId = session()->get('id_users');
-    $subs   = $this->userModel->getSubordinadosDeJefe($jefeId);
-    $subIds = array_column($subs, 'id_users');
-    $subIds[] = $jefeId;
 
-    // 3) Consulta de indicadores en el rango de fecha
-    $equipo = $this->histModel
-        ->select([
-            'historial_indicadores.id_historial',
-            'i.id_indicador       AS id_indicador',
-            'usuarios.nombre_completo AS nombre_completo',
-            'i.nombre             AS nombre_indicador',
-            'i.meta_valor         AS meta_valor',
-            'i.tipo_meta          AS tipo_meta',
-            'i.metodo_calculo     AS metodo_calculo',
-            'i.unidad             AS unidad',
-            'historial_indicadores.resultado_real',
-            'historial_indicadores.comentario',
-        ])
-        // no usamos from(), el modelo ya sabe de qué tabla viene
-        ->join('indicadores_perfil ip',
-               'ip.id_indicador_perfil = historial_indicadores.id_indicador_perfil')
-        ->join('indicadores i',
-               'i.id_indicador = ip.id_indicador')
-        ->join('users AS usuarios',
-               'usuarios.id_users = historial_indicadores.id_usuario')
-        ->whereIn('historial_indicadores.id_usuario', $subIds)
-        ->where('historial_indicadores.fecha_registro >=', $fechaDesde)
-        ->where('historial_indicadores.fecha_registro <=', $fechaHasta)
-        ->orderBy('usuarios.nombre_completo', 'ASC')
-        ->orderBy('historial_indicadores.fecha_registro', 'DESC')
-        ->findAll();
+        // 2) IDs de subordinados + el jefe
+        $jefeId = session()->get('id_users');
+        $subs   = $this->userModel->getSubordinadosDeJefe($jefeId);
+        $subIds = array_column($subs, 'id_users');
+        $subIds[] = $jefeId;
 
-    // 4) Precargar partes de fórmula
-    $formulas = [];
-    foreach ($equipo as $item) {
-        $id = $item['id_indicador'];
-        if (! isset($formulas[$id])) {
-            $formulas[$id] = $this->partesModel
-                ->where('id_indicador', $id)
-                ->orderBy('orden', 'ASC')
-                ->findAll();
+        // 3) Consulta de indicadores en el rango de fecha
+        $equipo = $this->histModel
+            ->select([
+                'historial_indicadores.id_historial',
+                'i.id_indicador       AS id_indicador',
+                'usuarios.nombre_completo AS nombre_completo',
+                'i.nombre             AS nombre_indicador',
+                'i.meta_valor         AS meta_valor',
+                'i.tipo_meta          AS tipo_meta',
+                'i.metodo_calculo     AS metodo_calculo',
+                'i.unidad             AS unidad',
+                'historial_indicadores.resultado_real',
+                'historial_indicadores.comentario',
+            ])
+            // no usamos from(), el modelo ya sabe de qué tabla viene
+            ->join(
+                'indicadores_perfil ip',
+                'ip.id_indicador_perfil = historial_indicadores.id_indicador_perfil'
+            )
+            ->join(
+                'indicadores i',
+                'i.id_indicador = ip.id_indicador'
+            )
+            ->join(
+                'users AS usuarios',
+                'usuarios.id_users = historial_indicadores.id_usuario'
+            )
+            ->whereIn('historial_indicadores.id_usuario', $subIds)
+            ->where('historial_indicadores.fecha_registro >=', $fechaDesde)
+            ->where('historial_indicadores.fecha_registro <=', $fechaHasta)
+            ->orderBy('usuarios.nombre_completo', 'ASC')
+            ->orderBy('historial_indicadores.fecha_registro', 'DESC')
+            ->findAll();
+
+        // 4) Precargar partes de fórmula
+        $formulas = [];
+        foreach ($equipo as $item) {
+            $id = $item['id_indicador'];
+            if (! isset($formulas[$id])) {
+                $formulas[$id] = $this->partesModel
+                    ->where('id_indicador', $id)
+                    ->orderBy('orden', 'ASC')
+                    ->findAll();
+            }
         }
-    }
 
-    // 5) Renderizar vista
-    return view('jefatura/losindicadoresdemiequipo', [
-        'equipo'      => $equipo,
-        'fecha_desde' => $fechaDesde,
-        'fecha_hasta' => $fechaHasta,
-        'formulas'    => $formulas,
-    ]);
-}
+
+        // 5) Renderizar vista
+        return view('jefatura/losindicadoresdemiequipo', [
+            'equipo'      => $equipo,
+            'fecha_desde' => $fechaDesde,
+            'fecha_hasta' => $fechaHasta,
+            'formulas'    => $formulas,
+        ]);
+    }
 
 
 
@@ -340,76 +349,76 @@ class JefaturaController extends BaseController
      * Historial de indicadores de mi equipo en un rango de fechas
      */
     public function historialLosIndicadoresDeMiEquipo()
-{
-    $session    = session();
-    $jefeId     = $session->get('id_users');
+    {
+        $session    = session();
+        $jefeId     = $session->get('id_users');
 
-    // 1) Leer filtros o poner valores por defecto
-    $fechaDesde = $this->request->getGet('fecha_desde') ?? date('Y-m-01');
-    $fechaHasta = $this->request->getGet('fecha_hasta') ?? date('Y-m-d');
+        // 1) Leer filtros o poner valores por defecto
+        $fechaDesde = $this->request->getGet('fecha_desde') ?? date('Y-m-01');
+        $fechaHasta = $this->request->getGet('fecha_hasta') ?? date('Y-m-d');
 
-    // 2) IDs de subordinados
-    $subsIds = array_column(
-        $this->userModel->getSubordinadosDeJefe($jefeId),
-        'id_users'
-    );
-    if (empty($subsIds)) {
-        $equipo = [];
-    } else {
-        // 3) Consulta con joins y filtro por rango de fecha
-        $equipo = $this->histModel
-            ->select([
-                'historial_indicadores.*',
-                'indicadores_perfil.id_indicador        AS id_indicador',
-                'users.nombre_completo                  AS nombre_completo',
-                'indicadores.nombre                     AS nombre_indicador',
-                'indicadores.meta_valor                 AS meta_valor',
-                'indicadores.meta_descripcion           AS meta_descripcion',
-                'indicadores.tipo_meta                  AS tipo_meta',
-                'indicadores.metodo_calculo             AS metodo_calculo',
-                'indicadores.unidad                     AS unidad',
-                'indicadores.objetivo_proceso           AS objetivo_proceso',
-                'indicadores.objetivo_calidad           AS objetivo_calidad',
-                'indicadores.tipo_aplicacion            AS tipo_aplicacion',
-                'indicadores.created_at                 AS creado_en',
-                'indicadores.periodicidad               AS periodicidad',
-                'indicadores_perfil.meta                AS meta_texto',
-                'indicadores_perfil.ponderacion         AS ponderacion',
-                'historial_indicadores.resultado_real',
-                'historial_indicadores.comentario',
-                'historial_indicadores.valores_json',
-                'historial_indicadores.fecha_registro',
-            ])
-            ->join('indicadores_perfil', 'indicadores_perfil.id_indicador_perfil = historial_indicadores.id_indicador_perfil')
-            ->join('indicadores',         'indicadores.id_indicador = indicadores_perfil.id_indicador')
-            ->join('users',               'users.id_users = historial_indicadores.id_usuario')
-            ->whereIn('historial_indicadores.id_usuario', $subsIds)
-            ->where('historial_indicadores.fecha_registro >=', $fechaDesde . ' 00:00:00')
-            ->where('historial_indicadores.fecha_registro <=', $fechaHasta . ' 23:59:59')
-            ->orderBy('historial_indicadores.fecha_registro', 'DESC')
-            ->findAll();
-    }
-
-    // 4) Precargar partes de fórmula para cada indicador
-    $formulasHist = [];
-    foreach ($equipo as $r) {
-        $id = $r['id_indicador'];
-        if (! isset($formulasHist[$id])) {
-            $formulasHist[$id] = $this->partesModel
-                ->where('id_indicador', $id)
-                ->orderBy('orden', 'ASC')
+        // 2) IDs de subordinados
+        $subsIds = array_column(
+            $this->userModel->getSubordinadosDeJefe($jefeId),
+            'id_users'
+        );
+        if (empty($subsIds)) {
+            $equipo = [];
+        } else {
+            // 3) Consulta con joins y filtro por rango de fecha
+            $equipo = $this->histModel
+                ->select([
+                    'historial_indicadores.*',
+                    'indicadores_perfil.id_indicador        AS id_indicador',
+                    'users.nombre_completo                  AS nombre_completo',
+                    'indicadores.nombre                     AS nombre_indicador',
+                    'indicadores.meta_valor                 AS meta_valor',
+                    'indicadores.meta_descripcion           AS meta_descripcion',
+                    'indicadores.tipo_meta                  AS tipo_meta',
+                    'indicadores.metodo_calculo             AS metodo_calculo',
+                    'indicadores.unidad                     AS unidad',
+                    'indicadores.objetivo_proceso           AS objetivo_proceso',
+                    'indicadores.objetivo_calidad           AS objetivo_calidad',
+                    'indicadores.tipo_aplicacion            AS tipo_aplicacion',
+                    'indicadores.created_at                 AS creado_en',
+                    'indicadores.periodicidad               AS periodicidad',
+                    'indicadores_perfil.meta                AS meta_texto',
+                    'indicadores_perfil.ponderacion         AS ponderacion',
+                    'historial_indicadores.resultado_real',
+                    'historial_indicadores.comentario',
+                    'historial_indicadores.valores_json',
+                    'historial_indicadores.fecha_registro',
+                ])
+                ->join('indicadores_perfil', 'indicadores_perfil.id_indicador_perfil = historial_indicadores.id_indicador_perfil')
+                ->join('indicadores',         'indicadores.id_indicador = indicadores_perfil.id_indicador')
+                ->join('users',               'users.id_users = historial_indicadores.id_usuario')
+                ->whereIn('historial_indicadores.id_usuario', $subsIds)
+                ->where('historial_indicadores.fecha_registro >=', $fechaDesde . ' 00:00:00')
+                ->where('historial_indicadores.fecha_registro <=', $fechaHasta . ' 23:59:59')
+                ->orderBy('historial_indicadores.fecha_registro', 'DESC')
                 ->findAll();
         }
-    }
 
-    // 5) Renderizar vista con fórmulas incluidas
-    return view('jefatura/historiallosindicadoresdemiequipo', [
-        'equipo'       => $equipo,
-        'fecha_desde'  => $fechaDesde,
-        'fecha_hasta'  => $fechaHasta,
-        'formulasHist' => $formulasHist,
-    ]);
-}
+        // 4) Precargar partes de fórmula para cada indicador
+        $formulasHist = [];
+        foreach ($equipo as $r) {
+            $id = $r['id_indicador'];
+            if (! isset($formulasHist[$id])) {
+                $formulasHist[$id] = $this->partesModel
+                    ->where('id_indicador', $id)
+                    ->orderBy('orden', 'ASC')
+                    ->findAll();
+            }
+        }
+
+        // 5) Renderizar vista con fórmulas incluidas
+        return view('jefatura/historiallosindicadoresdemiequipo', [
+            'equipo'       => $equipo,
+            'fecha_desde'  => $fechaDesde,
+            'fecha_hasta'  => $fechaHasta,
+            'formulasHist' => $formulasHist,
+        ]);
+    }
 
 
     // Muestra el formulario para diligenciar la fórmula
