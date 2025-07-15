@@ -120,7 +120,7 @@ $routes->group('jefatura', ['namespace' => 'App\Controllers'], function($routes)
 });
 
 $routes->post('jefatura/guardarEquipoIndicador/(:num)', 'JefaturaController::guardarEquipoIndicador/$1');
-$routes->get('auditoria', 'AuditoriaController::listAuditoria');
+/* $routes->get('auditoria', 'AuditoriaController::listAuditoria'); */
 $routes->post('jefatura/saveIndicadoresComoJefe', 'JefaturaController::saveIndicadoresComoJefe');
 
 $routes->get('admin/admindashboard', 'AdminController::admindashboard');
@@ -170,7 +170,7 @@ $routes->get(  'jefatura/losindicadoresdemiequipo', 'JefaturaController::losIndi
 $routes->post( 'jefatura/guardarIndicadoresDeEquipo', 'JefaturaController::guardarIndicadoresDeEquipo');
 
 $routes->get('auditoria', 'AuditoriaController::index');
-$routes->get('auditoria', 'AuditoriaController::listAuditoria');
+/* $routes->get('auditoria', 'AuditoriaController::listAuditoria'); */
 
 $routes->get('trabajador/formula/(:num)', 'IndicadorController::diligenciarFormulaTrabajador/$1');
 $routes->post('trabajador/formula/evaluar/(:num)', 'IndicadorController::evaluarFormulaTrabajadorPost/$1');
@@ -186,6 +186,21 @@ $routes->post('jefatura/formula/guardar/(:num)',  'JefaturaController::guardarFo
 
 // Al lado de tus otras rutas de jefatura:
 $routes->get('jefatura/misIndicadoresComoJefe', 'JefaturaController::misIndicadoresComoJefe');
+
+
+
+$routes->get('auditoria-indicadores', 'AuditoriaIndicadorController::index');
+
+$routes->get('cambiarclave', 'AuthController::formPrimerLogin');
+$routes->post('cambiarclave', 'AuthController::procesarPrimerLogin');
+
+$routes->get('recuperar', 'AuthController::formRecuperar');
+$routes->post('recuperar', 'AuthController::procesarRecuperar');
+
+$routes->get('resetear/(:segment)', 'AuthController::formResetear/$1');
+$routes->post('resetear', 'AuthController::procesarResetear');
+$routes->post('resetear/(:segment)', 'AuthController::procesarResetear/$1');
+
 
 
 

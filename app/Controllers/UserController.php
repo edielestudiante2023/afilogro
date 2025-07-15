@@ -65,8 +65,14 @@ class UserController extends BaseController
     public function addUserPost()
     {
         $post = $this->request->getPost();
+
+        // Encriptar contraseña
         $post['password'] = password_hash($post['password'], PASSWORD_DEFAULT);
 
+        // Forzar primer_login a 1 (obliga a cambiar contraseña al ingresar por primera vez)
+        $post['primer_login'] = 1;
+
+        // Intenta insertar el nuevo usuario
         if (! $this->userModel->insert($post)) {
             return redirect()->back()
                 ->with('errors', $this->userModel->errors())
@@ -75,6 +81,7 @@ class UserController extends BaseController
 
         return redirect()->to('/users')->with('success', 'Usuario creado.');
     }
+
 
     public function editUser($id)
     {

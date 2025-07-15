@@ -21,7 +21,7 @@ class AuditoriaController extends Controller
     /**
      * Muestra el listado de auditorías de edición de indicadores
      */
-    public function listAuditoria()
+    /* public function listAuditoria()
     {
         $auditorias = $this->auditoriaModel
             ->select(
@@ -40,5 +40,5 @@ class AuditoriaController extends Controller
         return view('management/list_auditoria', [
             'auditorias' => $auditorias
         ]);
-    }
+    } */
 }
