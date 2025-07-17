@@ -52,6 +52,27 @@
             action="<?= base_url('trabajador/saveIndicadores') ?>">
             <?= csrf_field() ?>
 
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="periodo" class="form-label">Fecha de corte:</label>
+                    <input
+                        type="date"
+                        name="periodo"
+                        id="periodo"
+                        class="form-control"
+                        value="<?= esc($periodo) ?>"
+                        required>
+                </div>
+                <div class="col-md-8 d-flex align-items-end">
+                    <h3 style="color: #6f42c1;">
+                        📅 Selecciona la fecha real de corte a la que corresponde el resultado que vas a registrar.
+                    </h3>
+                </div>
+            </div>
+
+
+
+
             <div class="table-responsive">
                 <table class="table table-bordered table-striped align-middle w-100">
                     <thead class="table-dark">

@@ -12,28 +12,23 @@
   <link href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" rel="stylesheet">
 
   <style>
-    html,
-    body {
+    html, body {
       height: 100%;
       margin: 0;
       padding: 0;
     }
-
     .container-fluid {
       display: flex;
       flex-direction: column;
       height: 100%;
     }
-
     .dataTables_wrapper .dt-buttons {
       margin-bottom: 1rem;
     }
-
     table.dataTable {
       width: 100% !important;
       table-layout: fixed;
     }
-
     /* ancho aprox 20 caracteres */
     table.dataTable th.col-formula,
     table.dataTable td.col-formula {
@@ -42,7 +37,14 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-
+    /* permitir wrap en primera columna */
+    table.dataTable th:first-child,
+    table.dataTable td:first-child {
+      white-space: normal !important;
+      word-wrap: break-word;
+      overflow-wrap: anywhere;
+      max-width: 20ch;
+    }
     tfoot select {
       width: 100%;
       box-sizing: border-box;
@@ -81,7 +83,7 @@
     <?php else: ?>
       <div class="table-responsive flex-grow-1">
         <table id="historialTable"
-          class="table table-bordered table-striped align-middle nowrap dataTable">
+          class="table table-bordered table-striped align-middle dataTable">
           <thead class="table-dark">
             <tr>
               <th>Indicador</th>
@@ -97,15 +99,15 @@
               <th>Periodicidad</th>
               <th>Ponderación (%)</th>
               <th>Resultado</th>
+              <th>Periodo de Corte</th>
               <th>Cumple</th>
-
               <th>Comentario</th>
               <th>Fecha de Registro</th>
             </tr>
           </thead>
           <tfoot>
             <tr>
-              <?php for ($i = 0; $i < 15; $i++): ?>
+              <?php for ($i = 0; $i < 17; $i++): ?>
                 <th></th>
               <?php endfor; ?>
             </tr>
@@ -165,6 +167,7 @@
                 <td><?= esc($r['periodicidad']) ?></td>
                 <td><?= esc($r['ponderacion']) ?>%</td>
                 <td><?= esc($r['resultado_real']) ?></td>
+                <td><?= esc($r['periodo']) ?></td>
                 <td>
                   <?php if ($r['cumple'] === '1'): ?>
                     <span class="badge bg-success">Sí</span>
@@ -174,7 +177,6 @@
                     <span class="badge bg-secondary">—</span>
                   <?php endif; ?>
                 </td>
-
                 <td><?= esc($r['comentario']) ?: '—' ?></td>
                 <td data-bs-toggle="tooltip" data-bs-placement="top"
                   title="<?= esc($r['fecha_registro']) ?>">
@@ -215,10 +217,10 @@
         title: 'Historial_Resultados'
       }],
       order: [
-        [14, 'desc']
-      ], // ahora el índice 14 corresponde a "Fecha de Registro"
+        [16, 'desc']
+      ], // índice 16 = Fecha de Registro
       columnDefs: [{
-        targets: [6, 7, 8, 9, 11],
+        targets: [6, 7, 8, 9, 10],
         visible: false
       }]
     });

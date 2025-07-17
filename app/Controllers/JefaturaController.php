@@ -85,7 +85,8 @@ class JefaturaController extends BaseController
                 $cumpleMap[$h['id_indicador_perfil']] = $h['cumple'];
             }
         }
-        $periodo = date('Y-m');
+        $periodo = date('Y-m-d');
+
 
         // 2) Precargar partes de fórmula para cada indicador
         $formulas = [];
@@ -117,15 +118,30 @@ class JefaturaController extends BaseController
     {
         $session           = session();
         $jefeId            = $session->get('id_users');
-        $periodo           = date('Y-m');
+        $periodoInput      = $this->request->getPost('periodo');
+        $periodo = (preg_match('/^\d{4}-\d{2}-\d{2}$/', $periodoInput))
+            ? $periodoInput
+            : date('Y-m-d');
+
         $resultados        = $this->request->getPost('resultado_real') ?? [];
         $comentarios       = $this->request->getPost('comentario')      ?? [];
         $formulasDigitadas = $this->request->getPost('formula_partes')  ?? [];
 
-        // Modo SINGLE
+        // 🟣 Modo SINGLE
         if ($single = $this->request->getPost('single')) {
             $valor = trim($resultados[$single] ?? '');
             if ($valor !== '') {
+
+                // 🔒 Validar duplicado antes del insert
+                $existe = $this->histModel
+                    ->where('id_usuario', $jefeId)
+                    ->where('id_indicador_perfil', $single)
+                    ->where('periodo', $periodo)
+                    ->first();
+
+                if ($existe) {
+                    return redirect()->back()->with('error', 'Ya existe un resultado registrado para este indicador en esa fecha de corte.');
+                }
 
                 $relacion = $this->ipModel
                     ->select('indicadores.meta_valor, indicadores.tipo_meta, indicadores.id_indicador')
@@ -146,15 +162,12 @@ class JefaturaController extends BaseController
                         case 'mayor_igual':
                             $cumple = ($valorNum >= $metaEsperada) ? 1 : 0;
                             break;
-
                         case 'menor_igual':
                             $cumple = ($valorNum <= $metaEsperada) ? 1 : 0;
                             break;
-
                         case 'igual':
                             $cumple = ($valorNum == $metaEsperada) ? 1 : 0;
                             break;
-
                         case 'comparativa':
                             $anterior = $this->histModel
                                 ->where('id_usuario', $jefeId)
@@ -166,12 +179,10 @@ class JefaturaController extends BaseController
                                 $valorAnterior = (float) $anterior['resultado_real'];
                                 log_message('debug', "📊 Jefe IP {$single} | Usuario {$jefeId} | Valor anterior = {$valorAnterior} | Valor actual = {$valorNum}");
 
-                                // Actualiza la meta del indicador base
                                 $this->indicadorModel
                                     ->where('id_indicador', $idIndicador)
                                     ->set('meta_valor', $valorAnterior)
                                     ->update();
-                                log_message('debug', "🔄 Indicador {$idIndicador} actualizado: meta_valor = {$valorAnterior}");
                             } else {
                                 $valorAnterior = $valorNum;
                                 log_message('debug', "🆕 Primer comparativo jefe IP {$single} | Usuario {$jefeId} | Valor base = {$valorAnterior}");
@@ -213,11 +224,22 @@ class JefaturaController extends BaseController
             return redirect()->back()->with('success', 'Resultado guardado.');
         }
 
-        // Modo BATCH
+        // 🟣 Modo BATCH
         foreach ($resultados as $ipId => $valor) {
             $valor = trim($valor);
             if ($valor === '') {
                 continue;
+            }
+
+            // 🔒 Validar duplicado antes del insert
+            $existe = $this->histModel
+                ->where('id_usuario', $jefeId)
+                ->where('id_indicador_perfil', $ipId)
+                ->where('periodo', $periodo)
+                ->first();
+
+            if ($existe) {
+                continue; // Puedes acumular errores si prefieres
             }
 
             $relacion = $this->ipModel
@@ -239,15 +261,12 @@ class JefaturaController extends BaseController
                     case 'mayor_igual':
                         $cumple = ($valorNum >= $metaEsperada) ? 1 : 0;
                         break;
-
                     case 'menor_igual':
                         $cumple = ($valorNum <= $metaEsperada) ? 1 : 0;
                         break;
-
                     case 'igual':
                         $cumple = ($valorNum == $metaEsperada) ? 1 : 0;
                         break;
-
                     case 'comparativa':
                         $anterior = $this->histModel
                             ->where('id_usuario', $jefeId)
@@ -263,7 +282,6 @@ class JefaturaController extends BaseController
                                 ->where('id_indicador', $idIndicador)
                                 ->set('meta_valor', $valorAnterior)
                                 ->update();
-                            log_message('debug', "🔄 Indicador {$idIndicador} actualizado: meta_valor = {$valorAnterior}");
                         } else {
                             $valorAnterior = $valorNum;
                             log_message('debug', "🆕 Primer comparativo jefe IP {$ipId} | Usuario {$jefeId} | Valor base = {$valorAnterior}");
@@ -304,6 +322,7 @@ class JefaturaController extends BaseController
 
         return redirect()->back()->with('success', 'Resultados guardados correctamente.');
     }
+
 
 
 
@@ -573,7 +592,7 @@ class JefaturaController extends BaseController
 
 
     // Muestra el formulario para diligenciar la fórmula
-  
+
 
 
 
@@ -587,7 +606,11 @@ class JefaturaController extends BaseController
 
         $userId    = $session->get('id_users');
         $perfil    = $session->get('id_perfil_cargo');
-        $periodo   = date('Y-m');
+        $periodoInput = $this->request->getPost('periodo');
+        $periodo = (preg_match('/^\d{4}-\d{2}-\d{2}$/', $periodoInput))
+            ? $periodoInput
+            : date('Y-m-d');
+
         $resultado = $this->request->getPost('resultado');
         $partes    = $this->request->getPost('formula_partes') ?? [];
 
@@ -608,6 +631,17 @@ class JefaturaController extends BaseController
             log_message('error', '❌ Indicador no asignado al perfil.');
             return redirect()->to('/trabajador/historial_resultados')->with('error', 'Indicador no asignado a tu perfil.');
         }
+
+        $existe = $this->histModel
+            ->where('id_usuario', $userId)
+            ->where('id_indicador_perfil', $rel['id_indicador_perfil'])
+            ->where('periodo', $periodo)
+            ->first();
+
+        if ($existe) {
+            return redirect()->back()->with('error', 'Ya existe un resultado registrado para este indicador en esa fecha de corte.');
+        }
+
 
         $metaEsperada   = (float) $rel['meta_valor'];
         $tipoMeta       = $rel['tipo_meta'];

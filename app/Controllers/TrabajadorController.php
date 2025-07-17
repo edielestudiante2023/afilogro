@@ -60,7 +60,7 @@ class TrabajadorController extends BaseController
 
         // 1) Obtener indicadores para el perfil
         $items   = $this->ipModel->getIndicadoresPorPerfil($perfil);
-        $periodo = date('Y-m');
+        $periodo = date('Y-m-d');
 
         // 2) Historial del periodo actual
         $history = $this->histModel
@@ -99,7 +99,11 @@ class TrabajadorController extends BaseController
     {
         $session     = session();
         $userId      = $session->get('id_users');
-        $periodo     = date('Y-m');
+        $periodoInput = $this->request->getPost('periodo');
+        $periodo = (preg_match('/^\d{4}-\d{2}-\d{2}$/', $periodoInput))
+            ? $periodoInput
+            : date('Y-m-d');
+
         $resultados  = $this->request->getPost('resultado_real') ?? [];
         $comentarios = $this->request->getPost('comentario')     ?? [];
         $formulas    = $this->request->getPost('formula_partes') ?? [];
@@ -109,6 +113,18 @@ class TrabajadorController extends BaseController
             if ($valor === '') {
                 continue;
             }
+
+            // Validar duplicado de periodo
+            $existe = $this->histModel
+                ->where('id_usuario', $userId)
+                ->where('id_indicador_perfil', $ipId)
+                ->where('periodo', $periodo)
+                ->first();
+
+            if ($existe) {
+                return redirect()->back()->with('error', 'Ya existe un resultado para ese indicador en esa fecha de corte.');
+            }
+
 
             // 1) Traer meta y tipo de indicador
             $relacion = $this->ipModel
@@ -291,7 +307,11 @@ class TrabajadorController extends BaseController
 
         $userId    = $session->get('id_users');
         $perfil    = $session->get('id_perfil_cargo');
-        $periodo   = date('Y-m');
+        $periodoInput = $this->request->getPost('periodo');
+        $periodo = (preg_match('/^\d{4}-\d{2}-\d{2}$/', $periodoInput))
+            ? $periodoInput
+            : date('Y-m-d'); // fallback en caso de error
+
         $resultado = $this->request->getPost('resultado');
         $partes    = $this->request->getPost('formula_partes') ?? [];
 
@@ -312,6 +332,18 @@ class TrabajadorController extends BaseController
             log_message('error', '❌ Indicador no asignado al perfil.');
             return redirect()->to('/trabajador/historial_resultados')->with('error', 'Indicador no asignado a tu perfil.');
         }
+
+        // Validar duplicado de periodo
+        $existe = $this->histModel
+            ->where('id_usuario', $userId)
+            ->where('id_indicador_perfil', $rel['id_indicador_perfil'])
+            ->where('periodo', $periodo)
+            ->first();
+
+        if ($existe) {
+            return redirect()->back()->with('error', 'Ya existe un resultado registrado para este indicador en esa fecha de corte.');
+        }
+
 
         $metaEsperada   = (float) $rel['meta_valor'];
         $tipoMeta       = $rel['tipo_meta'];
