@@ -1,49 +1,65 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <title>Historial de Mis Indicadores – Jefatura</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Bootstrap & DataTables CSS -->
-  <link 
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" 
-    rel="stylesheet"
-  >
-  <link 
-    href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" 
-    rel="stylesheet"
-  >
-  <link 
-    href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" 
-    rel="stylesheet"
-  >
+  <!-- CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+  <link href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" rel="stylesheet">
 
   <style>
-    html, body { height: 100%; margin: 0; padding: 0; }
-    .container-fluid { display: flex; flex-direction: column; height: 100%; }
-    .dataTables_wrapper .dt-buttons { margin-bottom: 1rem; }
-    table.dataTable { 
-      width: 100% !important; 
-      table-layout: fixed; 
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
     }
-    /* Evitar overflow en **todas** las celdas */
+
+    .container-fluid {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .dataTables_wrapper .dt-buttons {
+      margin-bottom: 1rem;
+    }
+
+    table.dataTable {
+      width: 100% !important;
+      table-layout: fixed;
+    }
+
+    /* Evitar overflow en todas las celdas */
     table.dataTable th,
     table.dataTable td {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
+
     /* altura uniforme de filas */
-    table.dataTable tbody tr { height: 3rem; }
+    table.dataTable tbody tr {
+      height: 3rem;
+    }
+
     /* ancho aprox 20 caracteres para la fórmula */
     table.dataTable th.col-formula,
     table.dataTable td.col-formula {
       width: 20ch;
     }
-    tfoot select { width: 100%; box-sizing: border-box; }
+
+    tfoot select {
+      width: 100%;
+      box-sizing: border-box;
+    }
   </style>
 </head>
+
 <body>
   <?= $this->include('partials/nav') ?>
 
@@ -102,6 +118,7 @@
               <th>Periodicidad</th>
               <th>Ponderación (%)</th>
               <th>Resultado</th>
+              <th>Cumple</th>
               <th>Comentario</th>
               <th>Fecha de Registro</th>
             </tr>
@@ -124,8 +141,8 @@
                 <td><?= esc($r['meta_valor']) ?></td>
                 <td data-bs-toggle="tooltip"
                     data-bs-placement="top"
-                    title="<?= esc($r['meta_descripcion']) ?>">
-                  <?= esc($r['meta_descripcion']) ?>
+                    title="<?= esc($r['meta_texto']) ?>">
+                  <?= esc($r['meta_texto']) ?>
                 </td>
                 <td><?= esc($r['tipo_meta']) ?></td>
                 <td class="col-formula">
@@ -136,10 +153,10 @@
                     <small class="text-muted">Original:</small><br>
                     <?php
                       $orig = $formulasHist[$r['id_indicador']] ?? [];
-                      if (! empty($orig)):
-                        echo '<code>'.esc(implode('', array_column($orig,'valor'))).'</code>';
+                      if (!empty($orig)):
+                        echo '<code>' . esc(implode('', array_column($orig, 'valor'))) . '</code>';
                       else:
-                        echo '<code>'.esc($r['metodo_calculo']).'</code>';
+                        echo '<code>' . esc($r['metodo_calculo']) . '</code>';
                       endif;
                     ?>
                   </div>
@@ -155,7 +172,7 @@
                                  . esc($json['formula_partes'][$p['valor']] ?? '')
                                  . '</span>';
                           else:
-                            echo '<span>'.esc($p['valor']).'</span>';
+                            echo '<span>' . esc($p['valor']) . '</span>';
                           endif;
                         endforeach;
                       else:
@@ -168,10 +185,19 @@
                 <td><?= esc($r['objetivo_proceso']) ?></td>
                 <td><?= esc($r['objetivo_calidad']) ?></td>
                 <td><?= esc($r['tipo_aplicacion']) ?></td>
-                <td><?= esc($r['created_at']) ?></td>
+                <td><?= esc($r['creado_en']) ?></td>
                 <td><?= esc($r['periodicidad']) ?></td>
                 <td><?= esc($r['ponderacion']) ?>%</td>
                 <td><?= esc($r['resultado_real']) ?></td>
+                <td class="text-center">
+                  <?php if ($r['cumple'] === '1'): ?>
+                    <span class="badge bg-success">Sí</span>
+                  <?php elseif ($r['cumple'] === '0'): ?>
+                    <span class="badge bg-danger">No</span>
+                  <?php else: ?>
+                    <span class="badge bg-secondary">—</span>
+                  <?php endif; ?>
+                </td>
                 <td><?= esc($r['comentario']) ?: '—' ?></td>
                 <td data-bs-toggle="tooltip"
                     data-bs-placement="top"
@@ -184,35 +210,23 @@
         </table>
       </div>
     <?php endif; ?>
+
   </div>
 
   <?= $this->include('partials/logout') ?>
 
   <!-- JS: jQuery, Bootstrap, DataTables, Buttons, JSZip -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script 
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
-  </script>
-  <script 
-    src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js">
-  </script>
-  <script 
-    src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js">
-  </script>
-  <script 
-    src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js">
-  </script>
-  <script 
-    src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js">
-  </script>
-  <script 
-    src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js">
-  </script>
-  <script 
-    src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js">
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+
   <script>
-    // Inicializa tooltips
+    // Inicializa tooltips de Bootstrap
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
       new bootstrap.Tooltip(el);
     });
@@ -221,14 +235,19 @@
     $('#historialTable').DataTable({
       scrollX: true,
       dom: 'Bfrtip',
-      buttons: [
-        { extend: 'excelHtml5', title: 'Historial_de_Indicadores_Jefatura' }
+      buttons: [{
+        extend: 'excelHtml5',
+        title: 'Historial_de_Indicadores_Jefatura'
+      }],
+      order: [
+        [14, 'desc']
       ],
-      order: [[14, 'desc']],
-      columnDefs: [
-        { targets: [6,7,8,9,11], visible: false }
-      ]
+      columnDefs: [{
+        targets: [6, 7, 8, 9, 11],
+        visible: false
+      }]
     });
   </script>
 </body>
+
 </html>

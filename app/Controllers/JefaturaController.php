@@ -71,6 +71,20 @@ class JefaturaController extends BaseController
 
         // 1) Indicadores asignados a este perfil
         $items   = $this->ipModel->getIndicadoresPorPerfil($perfil);
+
+        $historial = $this->histModel
+            ->select('id_indicador_perfil, cumple')
+            ->where('id_usuario', $jefeId)
+            ->orderBy('fecha_registro', 'DESC')
+            ->findAll();
+
+        // Mapear por perfil
+        $cumpleMap = [];
+        foreach ($historial as $h) {
+            if (! isset($cumpleMap[$h['id_indicador_perfil']])) {
+                $cumpleMap[$h['id_indicador_perfil']] = $h['cumple'];
+            }
+        }
         $periodo = date('Y-m');
 
         // 2) Precargar partes de fórmula para cada indicador
@@ -87,6 +101,7 @@ class JefaturaController extends BaseController
             'items'     => $items,
             'periodo'   => $periodo,
             'formulas'  => $formulas,
+            'cumpleMap' => $cumpleMap, // ← ✅
         ]);
     }
 
@@ -107,15 +122,81 @@ class JefaturaController extends BaseController
         $comentarios       = $this->request->getPost('comentario')      ?? [];
         $formulasDigitadas = $this->request->getPost('formula_partes')  ?? [];
 
-        // 1) Modo single (botón por fila)
+        // Modo SINGLE
         if ($single = $this->request->getPost('single')) {
             $valor = trim($resultados[$single] ?? '');
             if ($valor !== '') {
-                // Preparamos el JSON
+
+                $relacion = $this->ipModel
+                    ->select('indicadores.meta_valor, indicadores.tipo_meta, indicadores.id_indicador')
+                    ->join('indicadores', 'indicadores.id_indicador = indicadores_perfil.id_indicador')
+                    ->where('id_indicador_perfil', $single)
+                    ->first();
+
+                $metaEsperada  = (float) $relacion['meta_valor'];
+                $tipoMeta      = $relacion['tipo_meta'];
+                $idIndicador   = $relacion['id_indicador'];
+                $cumple        = null;
+                $valorAnterior = null;
+
+                if (is_numeric($valor)) {
+                    $valorNum = (float) $valor;
+
+                    switch ($tipoMeta) {
+                        case 'mayor_igual':
+                            $cumple = ($valorNum >= $metaEsperada) ? 1 : 0;
+                            break;
+
+                        case 'menor_igual':
+                            $cumple = ($valorNum <= $metaEsperada) ? 1 : 0;
+                            break;
+
+                        case 'igual':
+                            $cumple = ($valorNum == $metaEsperada) ? 1 : 0;
+                            break;
+
+                        case 'comparativa':
+                            $anterior = $this->histModel
+                                ->where('id_usuario', $jefeId)
+                                ->where('id_indicador_perfil', $single)
+                                ->orderBy('fecha_registro', 'DESC')
+                                ->first();
+
+                            if ($anterior && is_numeric($anterior['resultado_real'])) {
+                                $valorAnterior = (float) $anterior['resultado_real'];
+                                log_message('debug', "📊 Jefe IP {$single} | Usuario {$jefeId} | Valor anterior = {$valorAnterior} | Valor actual = {$valorNum}");
+
+                                // Actualiza la meta del indicador base
+                                $this->indicadorModel
+                                    ->where('id_indicador', $idIndicador)
+                                    ->set('meta_valor', $valorAnterior)
+                                    ->update();
+                                log_message('debug', "🔄 Indicador {$idIndicador} actualizado: meta_valor = {$valorAnterior}");
+                            } else {
+                                $valorAnterior = $valorNum;
+                                log_message('debug', "🆕 Primer comparativo jefe IP {$single} | Usuario {$jefeId} | Valor base = {$valorAnterior}");
+                            }
+
+                            $cumple = ($valorNum > $valorAnterior) ? 1 : 0;
+                            break;
+                    }
+                }
+
                 $json = ['valor' => $valor];
                 if (isset($formulasDigitadas[$single])) {
                     $json['formula_partes'] = $formulasDigitadas[$single];
                 }
+                if ($tipoMeta === 'comparativa') {
+                    $json['valor_anterior'] = $valorAnterior;
+                }
+
+                log_message('debug', '📝 Insertando (single) en historial_indicadores: ' . json_encode([
+                    'id_indicador_perfil' => $single,
+                    'id_usuario'          => $jefeId,
+                    'resultado_real'      => $valor,
+                    'valor_anterior'      => $valorAnterior,
+                    'cumple'              => $cumple,
+                ]));
 
                 $this->histModel->insert([
                     'id_indicador_perfil' => $single,
@@ -125,23 +206,89 @@ class JefaturaController extends BaseController
                     'resultado_real'      => $valor,
                     'comentario'          => trim($comentarios[$single] ?? ''),
                     'fecha_registro'      => date('Y-m-d H:i:s'),
+                    'cumple'              => is_null($cumple) ? null : (int) $cumple,
                 ]);
             }
+
             return redirect()->back()->with('success', 'Resultado guardado.');
         }
 
-        // 2) Modo batch (todas las filas)
+        // Modo BATCH
         foreach ($resultados as $ipId => $valor) {
             $valor = trim($valor);
             if ($valor === '') {
                 continue;
             }
 
-            // Preparamos el JSON
+            $relacion = $this->ipModel
+                ->select('indicadores.meta_valor, indicadores.tipo_meta, indicadores.id_indicador')
+                ->join('indicadores', 'indicadores.id_indicador = indicadores_perfil.id_indicador')
+                ->where('id_indicador_perfil', $ipId)
+                ->first();
+
+            $metaEsperada  = (float) $relacion['meta_valor'];
+            $tipoMeta      = $relacion['tipo_meta'];
+            $idIndicador   = $relacion['id_indicador'];
+            $cumple        = null;
+            $valorAnterior = null;
+
+            if (is_numeric($valor)) {
+                $valorNum = (float) $valor;
+
+                switch ($tipoMeta) {
+                    case 'mayor_igual':
+                        $cumple = ($valorNum >= $metaEsperada) ? 1 : 0;
+                        break;
+
+                    case 'menor_igual':
+                        $cumple = ($valorNum <= $metaEsperada) ? 1 : 0;
+                        break;
+
+                    case 'igual':
+                        $cumple = ($valorNum == $metaEsperada) ? 1 : 0;
+                        break;
+
+                    case 'comparativa':
+                        $anterior = $this->histModel
+                            ->where('id_usuario', $jefeId)
+                            ->where('id_indicador_perfil', $ipId)
+                            ->orderBy('fecha_registro', 'DESC')
+                            ->first();
+
+                        if ($anterior && is_numeric($anterior['resultado_real'])) {
+                            $valorAnterior = (float) $anterior['resultado_real'];
+                            log_message('debug', "📊 Jefe IP {$ipId} | Usuario {$jefeId} | Valor anterior = {$valorAnterior} | Valor actual = {$valorNum}");
+
+                            $this->indicadorModel
+                                ->where('id_indicador', $idIndicador)
+                                ->set('meta_valor', $valorAnterior)
+                                ->update();
+                            log_message('debug', "🔄 Indicador {$idIndicador} actualizado: meta_valor = {$valorAnterior}");
+                        } else {
+                            $valorAnterior = $valorNum;
+                            log_message('debug', "🆕 Primer comparativo jefe IP {$ipId} | Usuario {$jefeId} | Valor base = {$valorAnterior}");
+                        }
+
+                        $cumple = ($valorNum > $valorAnterior) ? 1 : 0;
+                        break;
+                }
+            }
+
             $json = ['valor' => $valor];
             if (isset($formulasDigitadas[$ipId])) {
                 $json['formula_partes'] = $formulasDigitadas[$ipId];
             }
+            if ($tipoMeta === 'comparativa') {
+                $json['valor_anterior'] = $valorAnterior;
+            }
+
+            log_message('debug', '📝 Insertando (batch) en historial_indicadores: ' . json_encode([
+                'id_indicador_perfil' => $ipId,
+                'id_usuario'          => $jefeId,
+                'resultado_real'      => $valor,
+                'valor_anterior'      => $valorAnterior,
+                'cumple'              => $cumple,
+            ]));
 
             $this->histModel->insert([
                 'id_indicador_perfil' => $ipId,
@@ -151,6 +298,7 @@ class JefaturaController extends BaseController
                 'resultado_real'      => $valor,
                 'comentario'          => trim($comentarios[$ipId] ?? ''),
                 'fecha_registro'      => date('Y-m-d H:i:s'),
+                'cumple'              => is_null($cumple) ? null : (int) $cumple,
             ]);
         }
 
@@ -288,20 +436,24 @@ class JefaturaController extends BaseController
         $historial = $this->histModel
             ->select([
                 'historial_indicadores.*',
-                'indicadores_perfil.id_indicador AS id_indicador',   // ← lo agregamos
-                'indicadores.nombre            AS nombre_indicador',
-                'indicadores.meta_valor',
-                'indicadores.meta_descripcion',
+                'indicadores_perfil.id_indicador         AS id_indicador',
+                'users.nombre_completo                   AS nombre_completo',
+                'indicadores.nombre                      AS nombre_indicador',
+                'indicadores.meta_valor                  AS meta_valor',         // ← FALTABA
+                'indicadores.meta_descripcion            AS meta_texto',
+                'indicadores.ponderacion                 AS ponderacion',
+                'indicadores.periodicidad                AS periodicidad',
                 'indicadores.tipo_meta',
                 'indicadores.metodo_calculo',
                 'indicadores.unidad',
                 'indicadores.objetivo_proceso',
                 'indicadores.objetivo_calidad',
                 'indicadores.tipo_aplicacion',
-                'indicadores.created_at',
-                'indicadores.periodicidad      AS periodicidad',
-                'indicadores_perfil.meta',
-                'indicadores_perfil.ponderacion',
+                'indicadores.created_at                  AS creado_en',
+                'historial_indicadores.resultado_real',
+                'historial_indicadores.comentario',
+                'historial_indicadores.valores_json',
+                'historial_indicadores.fecha_registro',
             ])
             ->join(
                 'indicadores_perfil',
@@ -310,6 +462,11 @@ class JefaturaController extends BaseController
             ->join(
                 'indicadores',
                 'indicadores.id_indicador = indicadores_perfil.id_indicador'
+
+            )
+            ->join(
+                'users',
+                'users.id_users = historial_indicadores.id_usuario'
             )
             ->where('historial_indicadores.id_usuario', $userId)
             ->where('historial_indicadores.fecha_registro >=', $fechaDesde . ' 00:00:00')
@@ -340,13 +497,7 @@ class JefaturaController extends BaseController
 
 
     /**
-     * Historial de indicadores de mi equipo para un periodo
-     */
-    /**
-     * Historial de indicadores de mi equipo en un rango de fechas
-     */
-    /**
-     * Historial de indicadores de mi equipo en un rango de fechas
+
      */
     public function historialLosIndicadoresDeMiEquipo()
     {
@@ -373,22 +524,22 @@ class JefaturaController extends BaseController
                     'users.nombre_completo                  AS nombre_completo',
                     'indicadores.nombre                     AS nombre_indicador',
                     'indicadores.meta_valor                 AS meta_valor',
-                    'indicadores.meta_descripcion           AS meta_descripcion',
-                    'indicadores.tipo_meta                  AS tipo_meta',
-                    'indicadores.metodo_calculo             AS metodo_calculo',
-                    'indicadores.unidad                     AS unidad',
-                    'indicadores.objetivo_proceso           AS objetivo_proceso',
-                    'indicadores.objetivo_calidad           AS objetivo_calidad',
-                    'indicadores.tipo_aplicacion            AS tipo_aplicacion',
-                    'indicadores.created_at                 AS creado_en',
+                    'indicadores.meta_descripcion           AS meta_texto',
+                    'indicadores.ponderacion                AS ponderacion',
                     'indicadores.periodicidad               AS periodicidad',
-                    'indicadores_perfil.meta                AS meta_texto',
-                    'indicadores_perfil.ponderacion         AS ponderacion',
+                    'indicadores.tipo_meta',
+                    'indicadores.metodo_calculo',
+                    'indicadores.unidad',
+                    'indicadores.objetivo_proceso',
+                    'indicadores.objetivo_calidad',
+                    'indicadores.tipo_aplicacion',
+                    'indicadores.created_at                 AS creado_en',
                     'historial_indicadores.resultado_real',
                     'historial_indicadores.comentario',
                     'historial_indicadores.valores_json',
                     'historial_indicadores.fecha_registro',
                 ])
+
                 ->join('indicadores_perfil', 'indicadores_perfil.id_indicador_perfil = historial_indicadores.id_indicador_perfil')
                 ->join('indicadores',         'indicadores.id_indicador = indicadores_perfil.id_indicador')
                 ->join('users',               'users.id_users = historial_indicadores.id_usuario')
@@ -422,131 +573,129 @@ class JefaturaController extends BaseController
 
 
     // Muestra el formulario para diligenciar la fórmula
-    public function fillFormula(int $idIndicador)
-    {
-        $session = session();
-        if (! $session->has('id_users')) {
-            return redirect()->to('/login')
-                ->with('error', 'Tu sesión ha expirado.');
-        }
+  
 
-        // 1) Traer los datos del indicador (tiene campo 'nombre' e 'id_indicador')
-        $indicador = $this->indicadorModel->find($idIndicador);
-        if (! $indicador) {
-            throw new PageNotFoundException("Indicador #{$idIndicador} no existe");
-        }
-
-        // 2) Traer las partes de la fórmula
-        $partes = $this->partesModel
-            ->where('id_indicador', $idIndicador)
-            ->orderBy('orden', 'ASC')
-            ->findAll();
-
-
-        // 3) Renderizar vista
-        return view('jefatura/fill_formula_jefe', [
-            'indicador' => $indicador,
-            'partes'    => $partes,
-        ]);
-    }
-
-    // Recibe el POST con los datos de cada parte, calcula y confirma
-    public function fillFormulaPost(int $idIndicador)
-    {
-        $session = session();
-        if (! $session->has('id_users') || ! $session->has('id_perfil_cargo')) {
-            return redirect()->to('/login')
-                ->with('error', 'Tu sesión ha expirado.');
-        }
-        $perfil = $session->get('id_perfil_cargo');
-
-        // 1) Cargar las partes de la fórmula
-        $partes = $this->partesModel
-            ->where('id_indicador', $idIndicador)
-            ->orderBy('orden', 'ASC')
-            ->findAll();
-
-        // 2) Leer los valores enviados
-        $inputs = $this->request->getPost('dato') ?? [];
-
-        // 3) Armar la expresión
-        $expr = '';
-        foreach ($partes as $p) {
-            if ($p['tipo_parte'] === 'dato') {
-                $valor = $inputs[$p['valor']] ?? 0;
-                $expr .= " {$valor}";
-            } else {
-                $expr .= " {$p['valor']}";
-            }
-        }
-        $expr = trim($expr);
-
-        // 4) Calcular el resultado con manejo de división por cero
-        try {
-            $resultado = eval("return {$expr};");
-        } catch (\DivisionByZeroError $e) {
-            // Redirigir con mensaje de error
-            return redirect()->back()
-                ->with('error', 'Error en la fórmula: división por cero. Verifica los valores ingresados.');
-        } catch (\ParseError $e) {
-            // En caso de sintaxis inválida
-            return redirect()->back()
-                ->with('error', 'Error en la fórmula: sintaxis inválida.');
-        }
-
-        // 5) Traer datos del indicador (incluye el nombre)
-        $indicador = $this->ipModel
-            ->select([
-                'indicadores_perfil.id_indicador_perfil',
-                'indicadores.id_indicador',
-                'indicadores.nombre AS nombre'
-            ])
-            ->join(
-                'indicadores',
-                'indicadores.id_indicador = indicadores_perfil.id_indicador'
-            )
-            ->where('indicadores_perfil.id_indicador', $idIndicador)
-            ->where('indicadores_perfil.id_perfil_cargo', $perfil)
-            ->first();
-
-        // 6) Enviar todo a la vista
-        return view('jefatura/confirmar_formula_jefe', [
-            'indicador' => $indicador,
-            'formula'   => $expr,
-            'resultado' => $resultado,
-            'partes'    => $inputs,
-        ]);
-    }
 
 
     // Guarda en historial el resultado calculado
-    public function guardarFormula(int $idIndicador)
+    public function guardarFormula($idIndicador)
     {
         $session = session();
-        $userId  = $session->get('id_users');
-        $periodo = date('Y-m');
-        $resultado    = $this->request->getPost('resultado');
-        $partesValores = $this->request->getPost('formula_partes') ?? [];
+        if (! $session->has('id_users') || ! $session->has('id_perfil_cargo')) {
+            return redirect()->to('/login')->with('error', 'Tu sesión ha expirado.');
+        }
 
-        // Busca el id_indicador_perfil de este jefe
+        $userId    = $session->get('id_users');
+        $perfil    = $session->get('id_perfil_cargo');
+        $periodo   = date('Y-m');
+        $resultado = $this->request->getPost('resultado');
+        $partes    = $this->request->getPost('formula_partes') ?? [];
+
+        log_message('debug', '🔍 ID usuario: ' . $userId);
+        log_message('debug', '🔍 ID indicador: ' . $idIndicador);
+        log_message('debug', '🔍 Resultado recibido: ' . $resultado);
+        log_message('debug', '🔍 Periodo actual: ' . $periodo);
+
+        // 1) Buscar relación perfil–indicador
         $rel = $this->ipModel
-            ->where('id_indicador', $idIndicador)
-            ->where('id_perfil_cargo', $session->get('id_perfil_cargo'))
+            ->select('indicadores_perfil.id_indicador_perfil, indicadores.meta_valor, indicadores.tipo_meta, indicadores.id_indicador')
+            ->join('indicadores', 'indicadores.id_indicador = indicadores_perfil.id_indicador')
+            ->where('indicadores_perfil.id_perfil_cargo', $perfil)
+            ->where('indicadores.id_indicador', $idIndicador)
             ->first();
 
+        if (! $rel) {
+            log_message('error', '❌ Indicador no asignado al perfil.');
+            return redirect()->to('/trabajador/historial_resultados')->with('error', 'Indicador no asignado a tu perfil.');
+        }
+
+        $metaEsperada   = (float) $rel['meta_valor'];
+        $tipoMeta       = $rel['tipo_meta'];
+        $idIndicador    = $rel['id_indicador'];
+        $cumple         = null;
+        $valorAnterior  = null;
+
+        log_message('debug', 'ℹ️ Tipo meta: ' . $tipoMeta);
+        log_message('debug', 'ℹ️ Meta esperada: ' . $metaEsperada);
+
+        if (is_numeric($resultado)) {
+            $valorNum = (float) $resultado;
+
+            switch ($tipoMeta) {
+                case 'mayor_igual':
+                case 'fija':
+                    $cumple = ($valorNum >= $metaEsperada) ? 1 : 0;
+                    break;
+
+                case 'menor_igual':
+                    $cumple = ($valorNum <= $metaEsperada) ? 1 : 0;
+                    break;
+
+                case 'igual':
+                    $cumple = ($valorNum == $metaEsperada) ? 1 : 0;
+                    break;
+
+                case 'comparativa':
+                    // Buscar último resultado anterior (sin filtrar por periodo)
+                    $anterior = $this->histModel
+                        ->where('id_usuario', $userId)
+                        ->where('id_indicador_perfil', $rel['id_indicador_perfil'])
+                        ->orderBy('fecha_registro', 'DESC')
+                        ->first();
+
+                    if ($anterior && is_numeric($anterior['resultado_real'])) {
+                        $valorAnterior = (float) $anterior['resultado_real'];
+                        log_message('debug', "📊 Comparativa IP {$rel['id_indicador_perfil']} | Usuario {$userId} | Valor anterior = {$valorAnterior} | Valor actual = {$valorNum}");
+
+                        // Actualizar meta_valor en la tabla indicadores
+                        $this->indicadorModel
+                            ->where('id_indicador', $idIndicador)
+                            ->set('meta_valor', $valorAnterior)
+                            ->update();
+                        log_message('debug', "🔄 Indicador {$idIndicador} actualizado: meta_valor = {$valorAnterior}");
+                    } else {
+                        $valorAnterior = $valorNum;
+                        log_message('debug', "🆕 Comparativa IP {$rel['id_indicador_perfil']} | Usuario {$userId} | Primer registro, se toma como valor base = {$valorAnterior}");
+                    }
+
+                    $cumple = ($valorNum > $valorAnterior) ? 1 : 0;
+                    break;
+            }
+        } else {
+            log_message('debug', '⚠️ Resultado no numérico: ' . print_r($resultado, true));
+        }
+
+        // 3) JSON con valor anterior si aplica
+        $json = [
+            'valor'          => $resultado,
+            'formula_partes' => $partes,
+        ];
+        if ($tipoMeta === 'comparativa') {
+            $json['valor_anterior'] = $valorAnterior;
+        }
+
+        // 4) Registro en log antes de insertar
+        log_message('debug', '📝 Insertando en historial_indicadores: ' . json_encode([
+            'id_indicador_perfil' => $rel['id_indicador_perfil'],
+            'id_usuario'          => $userId,
+            'periodo'             => $periodo,
+            'resultado_real'      => $resultado,
+            'valor_anterior'      => $valorAnterior,
+            'cumple'              => $cumple,
+        ]));
+
+        // 5) Insertar en base de datos
         $this->histModel->insert([
             'id_indicador_perfil' => $rel['id_indicador_perfil'],
             'id_usuario'          => $userId,
             'periodo'             => $periodo,
-            'valores_json'        => json_encode(['valor' => $resultado, 'formula_partes' => $partesValores]),
+            'valores_json'        => json_encode($json),
             'resultado_real'      => $resultado,
             'comentario'          => null,
             'fecha_registro'      => date('Y-m-d H:i:s'),
+            'cumple'              => is_null($cumple) ? null : (int) $cumple,
         ]);
 
-
-
-        return redirect()->to('/jefatura/historialmisindicadoresfeje')
-            ->with('success', 'Resultado guardado correctamente.');
+        return redirect()->to('jefatura/historialmisindicadoresfeje')->with('success', 'Resultado guardado correctamente.');
     }
 }

@@ -11,11 +11,9 @@
     <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
 
     <style>
-        /* Fila fija de 30px */
         #indicadorPerfilTable tbody tr {
             height: 30px !important;
         }
-        /* Ajuste vertical y padding */
         #indicadorPerfilTable td {
             padding-top: 0;
             padding-bottom: 0;
@@ -43,7 +41,6 @@
                     <th>Cargo</th>
                     <th>Indicador</th>
                     <th>Periodicidad</th>
-                    <th>Meta</th>
                     <th>Meta Valor</th>
                     <th>Meta Descripción</th>
                     <th>Ponderación (%)</th>
@@ -57,7 +54,6 @@
                     <th>Cargo</th>
                     <th>Indicador</th>
                     <th>Periodicidad</th>
-                    <th>Meta</th>
                     <th>Meta Valor</th>
                     <th>Meta Descripción</th>
                     <th>Ponderación (%)</th>
@@ -72,7 +68,6 @@
                     <td><?= esc($item['nombre_cargo']) ?></td>
                     <td><?= esc($item['nombre_indicador']) ?></td>
                     <td><?= esc($item['periodicidad']) ?></td>
-                    <td><?= esc($item['meta']) ?></td>
                     <td><?= esc($item['meta_valor']) ?></td>
                     <td><?= esc($item['meta_descripcion']) ?></td>
                     <td><?= esc($item['ponderacion']) ?></td>
@@ -97,7 +92,6 @@
 
     <script>
     $(function() {
-        // Inicializa DataTable con select en footer
         $('#indicadorPerfilTable').DataTable({
             responsive: true,
             autoWidth: false,

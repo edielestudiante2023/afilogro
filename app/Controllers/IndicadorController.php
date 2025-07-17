@@ -94,7 +94,7 @@ class IndicadorController extends BaseController
             'ponderacion'     => 'required',
             'meta_valor'      => 'required',
             'meta_descripcion' => 'required',
-            'tipo_meta'       => 'required|in_list[fija,comparativa]',
+            'tipo_meta' => 'required|in_list[mayor_igual,menor_igual,igual,comparativa]',
             'metodo_calculo'  => 'required|in_list[formula,manual,semiautomatico]',
             'unidad'          => 'required',
             'objetivo_proceso' => 'required',
@@ -185,28 +185,48 @@ class IndicadorController extends BaseController
 
 public function evaluarFormulaTrabajadorPost($id)
 {
-    $indicador   = $this->indicadorModel->find($id);
+    $indicador = $this->indicadorModel->find($id);
     if (! $indicador) throw new PageNotFoundException();
 
     $partesModel = new PartesFormulaModel();
     $partes      = $partesModel->getPartesPorIndicador($id);
     $inputs      = $this->request->getPost('dato');
 
+    // Log de entrada
+    log_message('debug', '📥 INPUTS DEL TRABAJADOR: ' . json_encode($inputs));
+    log_message('debug', '📐 PARTES DE LA FÓRMULA: ' . json_encode($partes));
+
     $formula = '';
     $valoresLimpios = [];
 
-    foreach ($partes as $p) {
+    foreach ($partes as $index => $p) {
         if ($p['tipo_parte'] === 'dato') {
             $clave = $p['valor'];
             $val   = isset($inputs[$clave]) ? floatval($inputs[$clave]) : 0;
             $valoresLimpios[$clave] = $val;
-            $formula .= " {$val}";
+
+            // Log detallado por parte
+            log_message('debug', "🔢 Parte #{$index}: DATO clave '{$clave}' = {$val}");
+
+            $formula .= $val;
         } else {
-            $formula .= " {$p['valor']}";
+            log_message('debug', "🧮 Parte #{$index}: OPERADOR '{$p['valor']}'");
+
+            $formula .= $p['valor'];
         }
     }
 
-    $resultado = eval("return {$formula};");
+    // Log fórmula final ensamblada
+    log_message('debug', "🧪 Fórmula construida: {$formula}");
+
+    try {
+        $resultado = eval("return {$formula};");
+        log_message('debug', "✅ Resultado calculado: {$resultado}");
+    } catch (\Throwable $e) {
+        log_message('error', "❌ Error al evaluar fórmula (Trabajador): {$e->getMessage()}");
+        return redirect()->back()
+            ->with('error', 'Error al calcular la fórmula. Verifica los valores ingresados.');
+    }
 
     return view('trabajador/confirmar_formula_trabajador', [
         'indicador'       => $indicador,
@@ -215,5 +235,75 @@ public function evaluarFormulaTrabajadorPost($id)
         'formula_partes'  => $valoresLimpios,
     ]);
 }
+
+public function diligenciarFormulaJefe($id)
+{
+    $indicador = $this->indicadorModel->find($id);
+    if (! $indicador) throw new PageNotFoundException();
+
+    $partesModel = new PartesFormulaModel();
+    $partes      = $partesModel->getPartesPorIndicador($id);
+
+    return view('jefatura/fill_formula_jefe', [
+        'indicador' => $indicador,
+        'partes'    => $partes,
+    ]);
+}
+
+public function evaluarFormulaJefePost($id)
+{
+    $indicador   = $this->indicadorModel->find($id);
+    if (! $indicador) throw new PageNotFoundException();
+
+    $partesModel = new PartesFormulaModel();
+    $partes      = $partesModel->getPartesPorIndicador($id);
+    $inputs      = $this->request->getPost('dato');
+
+    // Log: datos ingresados por el usuario
+    log_message('debug', '📥 INPUTS DEL JEFE: ' . json_encode($inputs));
+    log_message('debug', '📐 PARTES DE LA FÓRMULA: ' . json_encode($partes));
+
+    $formula = '';
+    $valoresLimpios = [];
+
+    foreach ($partes as $index => $p) {
+        if ($p['tipo_parte'] === 'dato') {
+            $clave = $p['valor'];
+            $val   = isset($inputs[$clave]) ? floatval($inputs[$clave]) : 0;
+            $valoresLimpios[$clave] = $val;
+
+            // Log por cada parte tipo dato
+            log_message('debug', "🔢 Parte #{$index}: DATO clave '{$clave}' = {$val}");
+
+            $formula .= $val;
+        } else {
+            // Log por cada parte operador/paréntesis
+            log_message('debug', "🧮 Parte #{$index}: OPERADOR '{$p['valor']}'");
+
+            $formula .= $p['valor'];
+        }
+    }
+
+    // Log final de la fórmula ensamblada
+    log_message('debug', "🧪 Fórmula construida: {$formula}");
+
+    try {
+        $resultado = eval("return {$formula};");
+
+        log_message('debug', "✅ Resultado calculado: {$resultado}");
+    } catch (\Throwable $e) {
+        log_message('error', "❌ Error al evaluar fórmula: {$e->getMessage()}");
+        return redirect()->back()
+            ->with('error', 'Error al calcular la fórmula. Verifica los valores ingresados.');
+    }
+
+    return view('jefatura/confirmar_formula_jefe', [
+        'indicador'       => $indicador,
+        'formula'         => $formula,
+        'resultado'       => $resultado,
+        'formula_partes'  => $valoresLimpios,
+    ]);
+}
+
 
 }

@@ -53,7 +53,7 @@
               <th>Objetivo Calidad</th>
               <th>Tipo Aplicación</th>
               <th>Periodicidad</th>
-              <th>Meta (texto)</th>
+              
               <th>Ponderación (%)</th>
               <th>Resultado</th>
               <th>Comentario</th>
@@ -96,7 +96,7 @@
               <td class="small"><?= esc($i['objetivo_calidad']) ?></td>
               <td><?= esc($i['tipo_aplicacion']) ?></td>
               <td><?= esc($i['periodicidad']) ?></td>
-              <td><?= esc($i['meta']) ?></td>
+              
               <td><?= esc($i['ponderacion']) ?>%</td>
 
               <td>

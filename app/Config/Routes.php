@@ -177,12 +177,15 @@ $routes->post('trabajador/formula/evaluar/(:num)', 'IndicadorController::evaluar
 // Al final de tu grupo de rutas de “trabajador”:
 $routes->post('trabajador/formula/guardar/(:num)', 'TrabajadorController::guardarFormula/$1');
 
-// Mostrar el formulario de fórmula
-$routes->get ('jefatura/formula/(:num)',          'JefaturaController::fillFormula/$1');
-// Procesar el cálculo (confirmación previa)
+
+$routes->get('jefatura/formula/(:num)', 'IndicadorController::diligenciarFormulaJefe/$1');
+$routes->post('jefatura/formula/evaluar/(:num)', 'IndicadorController::evaluarFormulaJefePost/$1');
+$routes->post('jefatura/formula/guardar/(:num)', 'JefaturaController::guardarFormula/$1');
+
+
+/* $routes->get ('jefatura/formula/(:num)',          'JefaturaController::fillFormula/$1');
 $routes->post('jefatura/formula/(:num)',          'JefaturaController::fillFormulaPost/$1');
-// Guardar en historial
-$routes->post('jefatura/formula/guardar/(:num)',  'JefaturaController::guardarFormula/$1');
+$routes->post('jefatura/formula/guardar/(:num)',  'JefaturaController::guardarFormula/$1'); */
 
 // Al lado de tus otras rutas de jefatura:
 $routes->get('jefatura/misIndicadoresComoJefe', 'JefaturaController::misIndicadoresComoJefe');

@@ -47,10 +47,9 @@
                     value="<?= old('ponderacion', esc($indicador['ponderacion'])) ?>" required>
             </div>
 
-            <!-- Tipo de Meta -->
             <div class="mb-3">
                 <label class="form-label">Tipo de Meta</label>
-                <select id="tipoMetaSelect" name="tipo_meta" class="form-select" required>
+                <select name="tipo_meta" class="form-select" required>
                     <option value="">-- Seleccione --</option>
                     <option value="mayor_igual" <?= old('tipo_meta', $indicador['tipo_meta']) == 'mayor_igual' ? 'selected' : '' ?>>
                         Cumple si el resultado es mayor o igual a la meta
@@ -65,20 +64,14 @@
                         Comparativa (la meta es el valor del periodo anterior)
                     </option>
                 </select>
+
             </div>
 
             <!-- Meta Valor -->
-            <div class="mb-3" id="metaValorContainer">
+            <div class="mb-3">
                 <label class="form-label">Meta Valor</label>
-                <input
-                    type="number"
-                    step="any"
-                    name="meta_valor"
-                    id="metaValorInput"
-                    class="form-control"
-                    value="<?= old('meta_valor', esc($indicador['meta_valor'] ?? '')) ?>"
-                    required
-                >
+                <input type="text" name="meta_valor" class="form-control"
+                    value="<?= old('meta_valor', esc($indicador['meta_valor'] ?? '')) ?>" required>
             </div>
 
             <!-- Meta Descripción -->
@@ -86,6 +79,9 @@
                 <label class="form-label">Meta Descripción</label>
                 <textarea name="meta_descripcion" class="form-control" rows="2" required><?= old('meta_descripcion', esc($indicador['meta_descripcion'] ?? '')) ?></textarea>
             </div>
+
+            <!-- Tipo de Meta -->
+            
 
             <!-- Método de Cálculo -->
             <div class="mb-3">
@@ -129,38 +125,30 @@
             </div>
 
             <!-- Botones de acción -->
+
+
             <div class="d-flex gap-2">
-                <button type="submit" name="accion" value="guardar" class="btn btn-primary">
+                <button
+                    type="submit"
+                    name="accion"
+                    value="guardar"
+                    class="btn btn-primary">
                     <i class="bi bi-save me-1"></i> Actualizar Indicador
                 </button>
-                <a href="<?= base_url('partesformula/add?id_indicador=' . $indicador['id_indicador']) ?>" class="btn btn-outline-secondary">
+
+                <a
+                    href="<?= base_url('partesformula/add?id_indicador=' . $indicador['id_indicador']) ?>"
+                    class="btn btn-outline-secondary">
                     <i class="bi bi-pencil-square me-1"></i> Editar Fórmula
                 </a>
+
                 <a href="<?= base_url('indicadores') ?>" class="btn btn-light">Cancelar</a>
             </div>
+
+
+
         </form>
     </div>
-
-    <!-- Script para ocultar/resetear Meta Valor -->
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const tipoMeta = document.getElementById('tipoMetaSelect');
-        const contMeta = document.getElementById('metaValorContainer');
-        const inputMeta = document.getElementById('metaValorInput');
-
-        function toggleMetaValor() {
-            if (tipoMeta.value === 'comparativa') {
-                contMeta.style.display = 'none';
-                inputMeta.value = 0;
-            } else {
-                contMeta.style.display = 'block';
-            }
-        }
-
-        tipoMeta.addEventListener('change', toggleMetaValor);
-        toggleMetaValor(); // Estado inicial al cargar
-    });
-    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

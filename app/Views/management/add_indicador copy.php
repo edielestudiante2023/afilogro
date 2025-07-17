@@ -37,16 +37,17 @@
                 <input type="text" name="periodicidad" class="form-control" value="<?= old('periodicidad') ?>" required>
             </div>
 
+            
+            
             <!-- Ponderación -->
             <div class="mb-3">
                 <label class="form-label">Ponderación (%)</label>
                 <input type="number" name="ponderacion" class="form-control" min="0" max="100" value="<?= old('ponderacion') ?>" required>
             </div>
 
-            <!-- Tipo de Meta -->
             <div class="mb-3">
                 <label class="form-label">Tipo de Meta</label>
-                <select id="tipoMetaSelect" name="tipo_meta" class="form-select" required>
+                <select name="tipo_meta" class="form-select" required>
                     <option value="">-- Seleccione --</option>
                     <option value="mayor_igual" <?= old('tipo_meta') == 'mayor_igual' ? 'selected' : '' ?>>
                         Cumple si el resultado es mayor o igual a la meta
@@ -64,20 +65,14 @@
                 <small class="form-text text-muted">
                     El tipo de meta define cómo se evalúa si el resultado cumple. La opción "Comparativa" usará el resultado del periodo anterior como referencia.
                 </small>
+
+
             </div>
 
             <!-- Meta Valor -->
-            <div class="mb-3" id="metaValorContainer">
+            <div class="mb-3">
                 <label class="form-label">Meta Valor</label>
-                <input
-                    type="number"
-                    step="any"
-                    name="meta_valor"
-                    id="metaValorInput"
-                    class="form-control"
-                    value="<?= old('meta_valor') ?>"
-                    required
-                >
+                <input type="number" step="any" name="meta_valor" class="form-control" value="<?= old('meta_valor') ?>" required>
             </div>
 
             <!-- Meta Descripción -->
@@ -85,6 +80,8 @@
                 <label class="form-label">Meta Descripción</label>
                 <textarea name="meta_descripcion" class="form-control" rows="2" required><?= old('meta_descripcion') ?></textarea>
             </div>
+
+            <!-- Tipo de Meta -->
 
             <!-- Método de Cálculo -->
             <div class="mb-3">
@@ -137,29 +134,6 @@
             </button>
         </form>
     </div>
-
-    <!-- Script para ocultar / resetear Meta Valor -->
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const tipoMeta = document.getElementById('tipoMetaSelect');
-        const contMetaValor = document.getElementById('metaValorContainer');
-        const inputMetaValor = document.getElementById('metaValorInput');
-
-        function actualizarMetaValor() {
-            if (tipoMeta.value === 'comparativa') {
-                contMetaValor.style.display = 'none';
-                inputMetaValor.value = 0;
-            } else {
-                contMetaValor.style.display = 'block';
-                // Si quieres restaurar el valor antiguo al desmarcar, descomenta:
-                // inputMetaValor.value = '<?= old('meta_valor', '') ?>';
-            }
-        }
-
-        tipoMeta.addEventListener('change', actualizarMetaValor);
-        actualizarMetaValor(); // estado inicial
-    });
-    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
