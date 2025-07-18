@@ -245,6 +245,7 @@ class TrabajadorController extends BaseController
             ->select([
                 'historial_indicadores.*',
                 'historial_indicadores.cumple',
+                'historial_indicadores.periodo',
                 'indicadores_perfil.id_indicador        AS id_indicador',
                 'indicadores.nombre                     AS nombre_indicador',
                 'indicadores.meta_valor                 AS meta_valor',
@@ -264,9 +265,9 @@ class TrabajadorController extends BaseController
             ->join('indicadores_perfil', 'indicadores_perfil.id_indicador_perfil = historial_indicadores.id_indicador_perfil')
             ->join('indicadores',         'indicadores.id_indicador = indicadores_perfil.id_indicador')
             ->where('historial_indicadores.id_usuario', $userId)
-            ->where('historial_indicadores.fecha_registro >=', $fechaDesde . ' 00:00:00')
-            ->where('historial_indicadores.fecha_registro <=', $fechaHasta . ' 23:59:59')
-            ->orderBy('historial_indicadores.fecha_registro', 'DESC')
+            ->where('historial_indicadores.periodo >=', $fechaDesde . ' 00:00:00')
+            ->where('historial_indicadores.periodo <=', $fechaHasta . ' 23:59:59')
+            ->orderBy('historial_indicadores.periodo', 'DESC')
             ->findAll();
 
         // 2) Precargar partes de fórmula para cada indicador del historial

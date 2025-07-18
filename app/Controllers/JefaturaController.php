@@ -363,8 +363,8 @@ class JefaturaController extends BaseController
             ->join('indicadores i',            'i.id_indicador = ip.id_indicador')
             ->join('users AS usuarios',        'usuarios.id_users = historial_indicadores.id_usuario')
             ->whereIn('historial_indicadores.id_usuario', $subIds)
-            ->where('historial_indicadores.fecha_registro >=', $fechaDesde)
-            ->where('historial_indicadores.fecha_registro <=', $fechaHasta)
+            ->where('historial_indicadores.periodo >=', $fechaDesde)
+            ->where('historial_indicadores.periodo <=', $fechaHasta)
             ->orderBy('historial_indicadores.periodo', 'DESC')
             ->orderBy('usuarios.nombre_completo', 'ASC')
             ->findAll();
@@ -472,9 +472,9 @@ class JefaturaController extends BaseController
                 'users.id_users = historial_indicadores.id_usuario'
             )
             ->where('historial_indicadores.id_usuario', $userId)
-            ->where('historial_indicadores.fecha_registro >=', $fechaDesde)
-            ->where('historial_indicadores.fecha_registro <=', $fechaHasta)
-            ->orderBy('historial_indicadores.fecha_registro', 'DESC')
+            ->where('historial_indicadores.periodo >=', $fechaDesde)
+            ->where('historial_indicadores.periodo <=', $fechaHasta)
+            ->orderBy('historial_indicadores.periodo', 'DESC')
             ->findAll();
 
         // 2) Precargar las partes de fórmula indexadas por id_indicador
@@ -542,6 +542,7 @@ class JefaturaController extends BaseController
                     'historial_indicadores.valores_json',
                     'historial_indicadores.fecha_registro',
                     'historial_indicadores.periodo',
+                    'historial_indicadores.cumple',
                 ])
 
                 ->join('indicadores_perfil', 'indicadores_perfil.id_indicador_perfil = historial_indicadores.id_indicador_perfil')
@@ -757,4 +758,53 @@ class JefaturaController extends BaseController
                 ->setJSON(['success' => false, 'message' => 'Error al actualizar.']);
         }
     }
+
+public function editarCumpleEquipo()
+{
+    if (! $this->request->isAJAX()) {
+        log_message('debug', 'editarCumpleEquipo invocado sin AJAX.');
+        return $this->response->setStatusCode(405)->setBody('Método no permitido');
+    }
+
+    $id         = $this->request->getPost('id_historial');
+    $nuevoValor = $this->request->getPost('cumple');
+
+    log_message('debug', "AJAX → recibidos id_historial={$id}, cumple='{$nuevoValor}'");
+
+    // Validación de valor
+    if (! in_array($nuevoValor, ['0', '1'], true)) {
+        log_message('debug', "editarCumpleEquipo → valor no válido para cumple: '{$nuevoValor}'");
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Valor no válido para cumple.'
+        ]);
+    }
+
+    // Preparar datos
+    $data = ['cumple' => (int)$nuevoValor];
+    log_message('debug', 'editarCumpleEquipo → a actualizar: ' . json_encode($data));
+
+    // Intentar update y capturar resultado
+    try {
+        $result = $this->histModel->update($id, $data);
+        log_message('debug', "editarCumpleEquipo → resultado de update(): " . var_export($result, true));
+
+        // Leer de nuevo el registro para verificar
+        $after = $this->histModel->find($id);
+        log_message('debug', 'editarCumpleEquipo → valor en BD tras update: ' . json_encode($after['cumple']));
+
+        return $this->response->setJSON([
+            'success' => true,
+            'cumple'  => (int)$after['cumple']
+        ]);
+    } catch (\Exception $e) {
+        log_message('error', 'editarCumpleEquipo → excepción al actualizar: ' . $e->getMessage());
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Error interno al actualizar.'
+        ]);
+    }
+}
+
+
 }

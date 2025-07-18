@@ -10,25 +10,31 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
   <link href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
   <style>
-    html, body {
+    html,
+    body {
       height: 100%;
       margin: 0;
       padding: 0;
     }
+
     .container-fluid {
       display: flex;
       flex-direction: column;
       height: 100%;
     }
+
     .dataTables_wrapper .dt-buttons {
       margin-bottom: 1rem;
     }
+
     table.dataTable {
       width: 100% !important;
       table-layout: fixed;
     }
+
     /* ancho aprox 20 caracteres */
     table.dataTable th.col-formula,
     table.dataTable td.col-formula {
@@ -37,6 +43,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+
     /* permitir wrap en primera columna */
     table.dataTable th:first-child,
     table.dataTable td:first-child {
@@ -45,6 +52,7 @@
       overflow-wrap: anywhere;
       max-width: 20ch;
     }
+
     tfoot select {
       width: 100%;
       box-sizing: border-box;
@@ -60,23 +68,27 @@
       class="btn btn-secondary mb-3">&larr; Volver al Dashboard</a>
     <h1 class="h3 mb-4">Historial de Resultados de Indicadores</h1>
 
-    <!-- filtro -->
-    <form method="get" class="row g-3 mb-4"
-      action="<?= base_url('trabajador/historialResultados') ?>">
+
+
+
+    <form method="get" class="row g-3 mb-4" action="<?= base_url('trabajador/historialResultados') ?>">
       <div class="col-auto">
         <label for="fecha_desde" class="form-label">Desde:</label>
-        <input type="date" id="fecha_desde" name="fecha_desde"
-          class="form-control" value="<?= esc($fecha_desde) ?>">
+        <input type="text" id="fecha_desde" name="fecha_desde"
+          class="datepicker form-control"
+          value="<?= esc($fecha_desde) ?>">
       </div>
       <div class="col-auto">
         <label for="fecha_hasta" class="form-label">Hasta:</label>
-        <input type="date" id="fecha_hasta" name="fecha_hasta"
-          class="form-control" value="<?= esc($fecha_hasta) ?>">
+        <input type="text" id="fecha_hasta" name="fecha_hasta"
+          class="datepicker form-control"
+          value="<?= esc($fecha_hasta) ?>">
       </div>
       <div class="col-auto align-self-end">
         <button type="submit" class="btn btn-primary">Filtrar</button>
       </div>
     </form>
+
 
     <?php if (empty($historial)): ?>
       <div class="alert alert-warning">No hay historial disponible.</div>
@@ -201,6 +213,22 @@
   <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      flatpickr('.datepicker', {
+        locale: 'es', // español
+        dateFormat: 'Y-m-d', // formato interno ISO (para el value)
+        altInput: true, // muestra otro input
+        altFormat: 'd/m/Y', // DD/MM/YYYY
+        allowInput: true, // dejar que el usuario escriba
+        monthSelectorType: 'dropdown' // selector de mes desplegable
+      });
+    });
+  </script>
 
   <script>
     // Inicializa tooltips de Bootstrap

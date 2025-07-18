@@ -206,6 +206,7 @@ $routes->post('resetear/(:segment)', 'AuthController::procesarResetear/$1');
 
 $routes->post('jefatura/editarPeriodoEquipo', 'JefaturaController::editarPeriodoEquipo');
 
+$routes->post('jefatura/editarCumpleEquipo', 'JefaturaController::editarCumpleEquipo');
 
 
 

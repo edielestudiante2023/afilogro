@@ -10,7 +10,8 @@
   <!-- DataTables CSS -->
   <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
   <!-- Datepicker CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <style>
     .bg-lavanda {
       background-color: #EDE7F6 !important;
@@ -42,20 +43,26 @@
   <div class="container-fluid py-4">
     <h1 class="h3 mb-4">Editar Indicadores – Equipo</h1>
 
-    <!-- FILTRO por rango de fechas -->
-    <form method="get" action="<?= base_url('jefatura/losindicadoresdemiequipo') ?>" class="row g-3 mb-4">
+
+
+    <form method="get" class="row g-3 mb-4" action="<?= base_url('jefatura/losindicadoresdemiequipo') ?>">
       <div class="col-auto">
-        <label for="fecha_desde" class="form-label">Fecha Desde:</label>
-        <input type="text" id="fecha_desde" name="fecha_desde" value="<?= esc($fecha_desde) ?>" class="form-control datepicker" placeholder="YYYY-MM-DD">
+        <label for="fecha_desde" class="form-label">Desde:</label>
+        <input type="text" id="fecha_desde" name="fecha_desde"
+          class="datepicker form-control"
+          value="<?= esc($fecha_desde) ?>">
       </div>
       <div class="col-auto">
-        <label for="fecha_hasta" class="form-label">Fecha Hasta:</label>
-        <input type="text" id="fecha_hasta" name="fecha_hasta" value="<?= esc($fecha_hasta) ?>" class="form-control datepicker" placeholder="YYYY-MM-DD">
+        <label for="fecha_hasta" class="form-label">Hasta:</label>
+        <input type="text" id="fecha_hasta" name="fecha_hasta"
+          class="datepicker form-control"
+          value="<?= esc($fecha_hasta) ?>">
       </div>
       <div class="col-auto align-self-end">
         <button type="submit" class="btn btn-primary">Filtrar</button>
       </div>
     </form>
+
 
     <!-- Tabla edición -->
     <form method="post" action="<?= base_url('jefatura/guardarIndicadoresDeEquipo') ?>">
@@ -74,7 +81,8 @@
               <th>Tipo Meta</th>
               <th>Fórmula</th>
               <th>Unidad</th>
-              <th>Resultado Real</th>
+              <th>Resultado</th>
+              <th>Cumple</th>
               <th>Comentario</th>
               <th>Acción</th>
             </tr>
@@ -97,6 +105,13 @@
                   <option value="">Todos</option>
                 </select></th>
               <th></th>
+              <th>
+                <select class="form-select form-select-sm">
+                  <option value="">Todos</option>
+                  <option value="1">Sí</option>
+                  <option value="0">No</option>
+                </select>
+              </th>
               <th></th>
               <th></th>
             </tr>
@@ -104,7 +119,6 @@
           <tbody>
             <?php foreach ($equipo as $item): ?>
               <tr>
-                <!-- CELDA EDITABLE INLINE -->
                 <td class="periodo-cell bg-lavanda" data-id="<?= $item['id_historial'] ?>">
                   <?= esc($item['periodo']) ?>
                 </td>
@@ -133,6 +147,20 @@
                     class="form-control form-control-sm"
                     value="<?= esc($item['resultado_real']) ?>">
                 </td>
+                <td class="td-cumple" data-id="<?= $item['id_historial'] ?>">
+                  <select class="form-select form-select-sm select-cumple">
+                    <option value="" disabled <?= ! isset($item['cumple']) || $item['cumple'] === '' ? 'selected' : '' ?>>
+                      Elija cumplimiento
+                    </option>
+                    <option value="1" <?= (isset($item['cumple']) && (string)$item['cumple'] === '1') ? 'selected' : '' ?>>
+                      Sí
+                    </option>
+                    <option value="0" <?= (isset($item['cumple']) && (string)$item['cumple'] === '0') ? 'selected' : '' ?>>
+                      No
+                    </option>
+                  </select>
+                </td>
+
                 <td>
                   <input
                     type="text"
@@ -168,19 +196,19 @@
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
   <script>
     // Tokens CSRF
     const csrfName = '<?= csrf_token() ?>';
     const csrfHash = '<?= csrf_hash() ?>';
 
     $(document).ready(function() {
-      // flatpickr para filtros
-      $('.datepicker').flatpickr({
-        dateFormat: 'Y-m-d'
-      });
+      
+    
 
       // DataTable
       $('#edicionTable').DataTable({
@@ -190,11 +218,16 @@
           [0, 'desc']
         ],
         columnDefs: [{
-          targets: 0, // columna "Periodo"
-          type: 'date'
-        }],
+            targets: 0,
+            type: 'date'
+          }, // Periodo
+          {
+            targets: 8,
+            orderable: false
+          } // Cumple no ordenable
+        ],
         initComplete: function() {
-          this.api().columns().every(function() {
+          this.api().columns().every(function(index) {
             const column = this;
             const footerSelect = $('select', column.footer());
             if (footerSelect.length) {
@@ -210,55 +243,57 @@
         }
       });
 
-
-
       // Edición inline de “periodo”
       $(document).on('click', '.periodo-cell', function() {
         const cell = $(this);
         const id = cell.data('id');
         const original = cell.text().trim();
-        if (cell.find('input').length) return; // ya en edición
+        if (cell.find('input').length) return;
 
         cell.html('<input type="text" class="form-control form-control-sm periodo-input" value="' + original + '">');
         const input = cell.find('input')[0];
 
-        flatpickr(input, {
-          dateFormat: 'Y-m-d',
-          defaultDate: original,
-          onClose: function(selectedDates, dateStr) {
-            if (!dateStr || dateStr === original) {
-              cell.text(original);
-              return;
-            }
-            const data = {
-              id_historial: id,
-              periodo: dateStr
-            };
-            data[csrfName] = csrfHash;
+        
+      });
 
-            $.ajax({
-              url: '<?= base_url('jefatura/editarPeriodoEquipo') ?>',
-              type: 'POST',
-              dataType: 'json',
-              data: data,
-              success: function(res) {
-                if (res.success) {
-                  cell.text(dateStr);
-                } else {
-                  alert(res.message || 'No se pudo actualizar.');
-                  cell.text(original);
-                }
-              },
-              error: function() {
-                alert('Error al comunicar con el servidor.');
-                cell.text(original);
-              }
-            });
-          }
-        }).open();
+      // Edición inline de “cumple”
+      $(document).on('change', '.select-cumple', function() {
+        const select = $(this);
+        const td = select.closest('.td-cumple');
+        const id = td.data('id');
+        const cumple = select.val();
+        const data = {
+          id_historial: id,
+          cumple: cumple
+        };
+        data[csrfName] = csrfHash;
+
+        $.ajax({
+          url: '<?= base_url('jefatura/editarCumpleEquipo') ?>',
+          method: 'POST',
+          data: data,
+          dataType: 'json',
+          success: response => {
+            if (!response.success) alert('No se pudo actualizar: ' + response.message);
+          },
+          error: () => alert('Error al comunicar con el servidor.')
+        });
       });
     });
   </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      flatpickr('.datepicker', {
+        locale: 'es', // español
+        dateFormat: 'Y-m-d', // formato interno ISO (para el value)
+        altInput: true, // muestra otro input
+        altFormat: 'd/m/Y', // DD/MM/YYYY
+        allowInput: true, // dejar que el usuario escriba
+        monthSelectorType: 'dropdown' // selector de mes desplegable
+      });
+    });
+  </script>
+
 </body>
 
 </html>

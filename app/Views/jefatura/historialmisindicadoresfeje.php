@@ -10,6 +10,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
   <link href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
   <style>
     html,
@@ -76,24 +77,24 @@
     <?php endif; ?>
 
     <!-- FILTRO Desde – Hasta -->
-    <form method="get" class="row g-3 mb-4"
-      action="<?= base_url('jefatura/historialmisindicadoresfeje') ?>">
+    <form method="get" class="row g-3 mb-4" action="<?= base_url('jefatura/historialmisindicadoresfeje') ?>">
       <div class="col-auto">
         <label for="fecha_desde" class="form-label">Desde:</label>
-        <input type="date" id="fecha_desde" name="fecha_desde"
-          class="form-control"
+        <input type="text" id="fecha_desde" name="fecha_desde"
+          class="datepicker form-control"
           value="<?= esc($fecha_desde) ?>">
       </div>
       <div class="col-auto">
         <label for="fecha_hasta" class="form-label">Hasta:</label>
-        <input type="date" id="fecha_hasta" name="fecha_hasta"
-          class="form-control"
+        <input type="text" id="fecha_hasta" name="fecha_hasta"
+          class="datepicker form-control"
           value="<?= esc($fecha_hasta) ?>">
       </div>
       <div class="col-auto align-self-end">
         <button type="submit" class="btn btn-primary">Filtrar</button>
       </div>
     </form>
+
 
     <?php if (empty($historial)): ?>
       <div class="alert alert-warning">
@@ -228,6 +229,8 @@
   <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 
   <script>
     // Inicializa tooltips de Bootstrap
@@ -244,7 +247,7 @@
         title: 'Historial_de_Indicadores_Jefatura'
       }],
       order: [
-        [15, 'desc']
+        [14, 'desc']
       ],
       columnDefs: [{
         targets: [6, 7, 8, 9, 11],
@@ -252,6 +255,19 @@
       }]
     });
   </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      flatpickr('.datepicker', {
+        locale: 'es', // español
+        dateFormat: 'Y-m-d', // formato interno ISO (para el value)
+        altInput: true, // muestra otro input
+        altFormat: 'd/m/Y', // DD/MM/YYYY
+        allowInput: true, // dejar que el usuario escriba
+        monthSelectorType: 'dropdown' // selector de mes desplegable
+      });
+    });
+  </script>
+
 </body>
 
 </html>
