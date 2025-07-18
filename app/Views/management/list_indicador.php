@@ -1,3 +1,6 @@
+<?php
+// app/Views/management/list_indicadores.php
+?>
 <!DOCTYPE html>
 <html lang="es">
 
@@ -65,7 +68,7 @@
       </div>
     </div>
 
-    <!-- Div de búsqueda personalizado para Nombre Indicador -->
+    <!-- Div de búsqueda para Nombre Indicador -->
     <div id="nombreFilter" class="mb-4 d-flex align-items-end">
       <div class="me-3">
         <label for="filterNameDropdown" class="form-label">Buscar Nombre Indicador (Lista)</label>
@@ -89,6 +92,7 @@
     <table id="indicadorTable" class="table table-striped table-bordered nowrap w-100">
       <thead class="table-dark align-middle">
         <tr>
+          <th>ID</th>
           <th>Nombre Indicador</th>
           <th>Meta Valor</th>
           <th>Meta Descripción</th>
@@ -106,8 +110,8 @@
       </thead>
       <tfoot class="table-dark align-middle">
         <tr>
-          <!-- Eliminamos el input de filtro aquí para Nombre -->
-          <th></th>
+          <th></th> <!-- ID sin filtro -->
+          <th></th> <!-- Nombre con filtro personalizado arriba -->
           <th><input type="text" placeholder="Buscar Meta Valor"></th>
           <th><input type="text" placeholder="Buscar Descripción"></th>
           <th><input type="text" placeholder="Buscar Tipo Meta"></th>
@@ -125,6 +129,7 @@
       <tbody>
         <?php foreach ($indicadores as $i): ?>
           <tr>
+            <td><?= esc($i['id_indicador']) ?></td>
             <td>
               <div class="cell-content" data-bs-toggle="tooltip" title="<?= esc($i['nombre']) ?>">
                 <?= esc($i['nombre']) ?>
@@ -184,7 +189,6 @@
     const nameStorageKey = 'indicadorNameFilter';
 
     $(document).ready(function() {
-      // Inicializa DataTable
       const table = $('#indicadorTable').DataTable({
         responsive: true,
         autoWidth: false,
@@ -192,9 +196,8 @@
           url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json'
         },
         initComplete: function() {
-          // filtros en el <tfoot>
           this.api().columns().every(function(idx) {
-            if (idx === 0) return; // omitimos la columna Nombre
+            if (idx === 0 || idx === 1) return;
             const column = this;
             const input = $('input', column.footer());
             input.on('keyup change clear', function() {
@@ -206,15 +209,13 @@
         }
       });
 
-      // Tooltips de Bootstrap
+      // Tooltips
       document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
         new bootstrap.Tooltip(el);
       });
 
-      // Prepara datos únicos de nombres
       const indicatorNames = <?= json_encode(array_values(array_unique(array_column($indicadores, 'nombre')))); ?>;
 
-      // Inicializa Select2
       $('#filterNameSelect2').select2({
         data: indicatorNames.map(n => ({ id: n, text: n })),
         placeholder: 'Buscar texto…',
@@ -222,49 +223,43 @@
         width: '200px'
       });
 
-      // Carga filtro guardado
       const saved = JSON.parse(localStorage.getItem(nameStorageKey) || '{}');
       if (saved.dropdown) {
         $('#filterNameDropdown').val(saved.dropdown);
-        table.column(0).search(saved.dropdown).draw();
+        table.column(1).search(saved.dropdown).draw();
       }
       if (saved.select2) {
         $('#filterNameSelect2').val(saved.select2).trigger('change');
-        table.column(0).search(saved.select2).draw();
+        table.column(1).search(saved.select2).draw();
       }
 
-      // Evento cambio en lista desplegable
       $('#filterNameDropdown').on('change', function() {
         const val = this.value;
-        // limpia select2
         $('#filterNameSelect2').val(null).trigger('change');
-        // aplica filtro
-        table.column(0).search(val).draw();
-        // guarda estado
-        localStorage.setItem(nameStorageKey, JSON.stringify({ dropdown: val }));
+        table.column(1).search(val).draw();
+        const st = JSON.parse(localStorage.getItem(nameStorageKey) || '{}');
+        st.dropdown = val;
+        st.select2 = '';
+        localStorage.setItem(nameStorageKey, JSON.stringify(st));
       });
 
-      // Evento cambio en select2
       $('#filterNameSelect2').on('change', function() {
         const val = this.value || '';
-        // limpia dropdown
         $('#filterNameDropdown').val('');
-        // aplica filtro
-        table.column(0).search(val).draw();
-        // guarda estado
-        localStorage.setItem(nameStorageKey, JSON.stringify({ select2: val }));
+        table.column(1).search(val).draw();
+        const st = JSON.parse(localStorage.getItem(nameStorageKey) || '{}');
+        st.select2 = val;
+        st.dropdown = '';
+        localStorage.setItem(nameStorageKey, JSON.stringify(st));
       });
 
-      // Botón Restablecer filtros
       $('#resetFilters').on('click', function() {
         localStorage.removeItem(nameStorageKey);
         $('#filterNameDropdown').val('');
         $('#filterNameSelect2').val(null).trigger('change');
-        table.columns().every(function() {
+        table.columns().every(function(idx) {
           this.search('');
-          if (this.index() !== 0) {
-            $('input', this.footer()).val('');
-          }
+          if (idx > 1) $('input', this.footer()).val('');
         });
         table.draw();
       });
