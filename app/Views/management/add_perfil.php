@@ -44,17 +44,22 @@
                 </select>
             </div>
 
+            <?php
+            $cargosUnicos = array_unique(array_column($jefes, 'cargo'));
+            sort($cargosUnicos); // opcional: orden alfabético
+            ?>
             <div class="mb-3">
                 <label class="form-label">Cargo de Jefe Inmediato</label>
                 <select name="jefe_inmediato" class="form-select select2" required>
                     <option value="">Seleccione Cargo del Jefe</option>
-                    <?php foreach ($jefes as $j): ?>
-                        <option value="<?= esc($j['cargo']) ?>" <?= old('jefe_inmediato') == $j['cargo'] ? 'selected' : '' ?>>
-                            <?= esc($j['cargo']) ?>
+                    <?php foreach ($cargosUnicos as $cargo): ?>
+                        <option value="<?= esc($cargo) ?>" <?= old('jefe_inmediato') == $cargo ? 'selected' : '' ?>>
+                            <?= esc($cargo) ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
             </div>
+
 
 
             <div class="mb-3">
