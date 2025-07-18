@@ -25,7 +25,7 @@
             <tr>
                 <th>Nombre Cargo</th>
                 <th>Área</th>
-                <th>Jefe Inmediato</th>
+                <th>Cargo Jefe Inmediato</th>
                 <th>Colaboradores</th>
                 <th>Creado</th>
                 <th class="text-center">Acciones</th>

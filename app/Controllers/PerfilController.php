@@ -1,6 +1,10 @@
-<?php namespace App\Controllers;
+<?php
+
+namespace App\Controllers;
 
 use App\Models\PerfilCargoModel;
+use App\Models\AreaModel;
+use App\Models\UserModel;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
@@ -32,7 +36,13 @@ class PerfilController extends BaseController
     // Formulario crear perfil
     public function addPerfil()
     {
-        return view('management/add_perfil');
+        $areaModel = new AreaModel();
+        $userModel = new UserModel();
+
+        $data['areas'] = $areaModel->where('estado_area', 'activa')->orderBy('nombre_area')->findAll();
+        $data['jefes'] = $userModel->where('activo', 1)->orderBy('cargo')->findAll();
+
+        return view('management/add_perfil', $data);
     }
 
     // Procesar creación perfil
@@ -46,8 +56,8 @@ class PerfilController extends BaseController
 
         if (! $this->validate($rules)) {
             return redirect()->back()
-                             ->with('errors', $this->validator->getErrors())
-                             ->withInput();
+                ->with('errors', $this->validator->getErrors())
+                ->withInput();
         }
 
         $this->perfilModel->insert($this->request->getPost());
@@ -61,7 +71,15 @@ class PerfilController extends BaseController
         if (! $perfil) {
             throw new PageNotFoundException("Perfil con ID $id no existe");
         }
-        return view('management/edit_perfil', ['perfil' => $perfil]);
+
+        $areaModel = new AreaModel();
+        $userModel = new UserModel();
+
+        $data['perfil'] = $perfil;
+        $data['areas'] = $areaModel->where('estado_area', 'activa')->orderBy('nombre_area')->findAll();
+        $data['jefes'] = $userModel->where('activo', 1)->orderBy('cargo')->findAll();
+
+        return view('management/edit_perfil', $data);
     }
 
     // Procesar edición perfil
@@ -75,8 +93,8 @@ class PerfilController extends BaseController
 
         if (! $this->validate($rules)) {
             return redirect()->back()
-                             ->with('errors', $this->validator->getErrors())
-                             ->withInput();
+                ->with('errors', $this->validator->getErrors())
+                ->withInput();
         }
 
         $this->perfilModel->update($id, $this->request->getPost());
