@@ -208,6 +208,8 @@ $routes->post('jefatura/editarPeriodoEquipo', 'JefaturaController::editarPeriodo
 
 $routes->post('jefatura/editarCumpleEquipo', 'JefaturaController::editarCumpleEquipo');
 
+$routes->get('users/completar/(:num)', 'UserController::completarUsuario/$1');
+$routes->post('users/completar/(:num)', 'UserController::completarUsuarioPost/$1');
 
 
 

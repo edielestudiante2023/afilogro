@@ -40,7 +40,8 @@ class UserModel extends Model
         'password'            => 'permit_empty|min_length[6]',
         'id_roles'            => 'required|integer',
         'id_areas'            => 'permit_empty|is_not_unique[areas.id_areas]',
-        'id_perfil_cargo'     => 'required|is_not_unique[perfiles_cargo.id_perfil_cargo]',
+        'id_perfil_cargo'     => 'permit_empty|is_not_unique[perfiles_cargo.id_perfil_cargo]',
+
         'activo'              => 'required|in_list[0,1]',
         'id_jefe'             => 'permit_empty|is_natural_no_zero|is_not_unique[users.id_users]',
         'primer_login'        => 'in_list[0,1]',

@@ -68,19 +68,23 @@ class UserController extends BaseController
 
         // Encriptar contraseña
         $post['password'] = password_hash($post['password'], PASSWORD_DEFAULT);
-
-        // Forzar primer_login a 1 (obliga a cambiar contraseña al ingresar por primera vez)
         $post['primer_login'] = 1;
 
-        // Intenta insertar el nuevo usuario
+        // Guardar el usuario
         if (! $this->userModel->insert($post)) {
             return redirect()->back()
                 ->with('errors', $this->userModel->errors())
                 ->withInput();
         }
 
-        return redirect()->to('/users')->with('success', 'Usuario creado.');
+        // ✅ Obtener el ID del nuevo usuario
+        $nuevoId = $this->userModel->getInsertID();
+
+        // ✅ Redirigir a la nueva vista para completar los datos
+        return redirect()->to("/users/completar/$nuevoId")
+            ->with('success', 'Usuario creado. Ahora puedes asignar perfil de cargo y jefe inmediato.');
     }
+
 
 
     public function editUser($id)
@@ -124,5 +128,47 @@ class UserController extends BaseController
     {
         $this->userModel->delete($id);
         return redirect()->to('/users')->with('success', 'Usuario eliminado.');
+    }
+
+    public function completarUsuario($id)
+    {
+        $user = $this->userModel->find($id);
+        if (! $user) {
+            throw new \CodeIgniter\Exceptions\PageNotFoundException("Usuario con ID $id no existe");
+        }
+
+        $data = [
+            'user'           => $user,
+            'perfiles_cargo' => $this->perfilModel->orderBy('nombre_cargo', 'ASC')->findAll(),
+            'jefes'          => $this->userModel->where('activo', 1)->orderBy('nombre_completo', 'ASC')->findAll()
+        ];
+        return view('management/completar_usuario', $data);
+    }
+
+    public function completarUsuarioPost($id)
+    {
+        $post = $this->request->getPost();
+
+        // Validaciones mínimas (puedes expandir si lo deseas)
+        if (empty($post['id_perfil_cargo'])) {
+            return redirect()->back()
+                ->withInput()
+                ->with('errors', ['Debes seleccionar un perfil de cargo.']);
+        }
+
+        // Construimos el arreglo de actualización
+        $datos = [
+            'id_perfil_cargo' => $post['id_perfil_cargo'],
+            'id_jefe'         => $post['id_jefe'] ?? null  // opcional
+        ];
+
+        // Ejecutamos el update
+        if (! $this->userModel->update($id, $datos)) {
+            return redirect()->back()
+                ->withInput()
+                ->with('errors', $this->userModel->errors());
+        }
+
+        return redirect()->to('/users')->with('success', 'Datos completados exitosamente para el usuario.');
     }
 }
