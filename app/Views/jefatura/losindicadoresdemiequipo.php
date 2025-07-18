@@ -12,7 +12,6 @@
   <!-- Datepicker CSS -->
   <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
   <style>
-    /* Fondo lavanda para la celda y el input */
     .bg-lavanda {
       background-color: #EDE7F6 !important;
     }
@@ -29,6 +28,10 @@
 
     .dataTables_scrollBody {
       max-height: 70vh !important;
+    }
+
+    .periodo-cell {
+      cursor: pointer;
     }
   </style>
 </head>
@@ -61,9 +64,10 @@
       <input type="hidden" name="fecha_hasta" value="<?= esc($fecha_hasta) ?>">
 
       <div class="table-responsive">
-        <table id="edicionTable" class="table table-striped nowrap w-100" style="width:100%">
+        <table id="edicionTable" class="table table-striped" style="width:100%">
           <thead class="table-dark">
             <tr>
+              <th>Periodo</th>
               <th>Trabajador</th>
               <th>Indicador</th>
               <th>Meta Valor</th>
@@ -77,6 +81,7 @@
           </thead>
           <tfoot>
             <tr>
+              <th></th>
               <th><select class="form-select form-select-sm">
                   <option value="">Todos</option>
                 </select></th>
@@ -99,6 +104,10 @@
           <tbody>
             <?php foreach ($equipo as $item): ?>
               <tr>
+                <!-- CELDA EDITABLE INLINE -->
+                <td class="periodo-cell bg-lavanda" data-id="<?= $item['id_historial'] ?>">
+                  <?= esc($item['periodo']) ?>
+                </td>
                 <td><?= esc($item['nombre_completo']) ?></td>
                 <td><?= esc($item['nombre_indicador']) ?></td>
                 <td><?= esc($item['meta_valor']) ?></td>
@@ -116,7 +125,6 @@
                     <code><?= esc($item['metodo_calculo']) ?></code>
                   <?php endif; ?>
                 </td>
-
                 <td><?= esc($item['unidad']) ?></td>
                 <td class="bg-lavanda">
                   <input
@@ -126,12 +134,19 @@
                     value="<?= esc($item['resultado_real']) ?>">
                 </td>
                 <td>
-                  <input type="text" name="cambios[<?= $item['id_historial'] ?>][comentario]"
-                    class="form-control form-control-sm" value="<?= esc($item['comentario']) ?>">
+                  <input
+                    type="text"
+                    name="cambios[<?= $item['id_historial'] ?>][comentario]"
+                    class="form-control form-control-sm"
+                    value="<?= esc($item['comentario']) ?>">
                 </td>
                 <td>
-                  <button type="submit" formaction="<?= base_url('jefatura/guardarIndicadoresDeEquipo') ?>"
-                    formmethod="post" class="btn btn-sm btn-success" name="enviar[<?= $item['id_historial'] ?>]">
+                  <button
+                    type="submit"
+                    formaction="<?= base_url('jefatura/guardarIndicadoresDeEquipo') ?>"
+                    formmethod="post"
+                    class="btn btn-sm btn-success"
+                    name="enviar[<?= $item['id_historial'] ?>]">
                     Enviar
                   </button>
                 </td>
@@ -157,16 +172,27 @@
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
   <script>
+    // Tokens CSRF
+    const csrfName = '<?= csrf_token() ?>';
+    const csrfHash = '<?= csrf_hash() ?>';
+
     $(document).ready(function() {
-      // Inicializa flatpickr
+      // flatpickr para filtros
       $('.datepicker').flatpickr({
         dateFormat: 'Y-m-d'
       });
 
-      // DataTable con scrollX y filtros select
+      // DataTable
       $('#edicionTable').DataTable({
         scrollX: true,
         autoWidth: false,
+        order: [
+          [0, 'desc']
+        ],
+        columnDefs: [{
+          targets: 0, // columna "Periodo"
+          type: 'date'
+        }],
         initComplete: function() {
           this.api().columns().every(function() {
             const column = this;
@@ -182,6 +208,54 @@
             }
           });
         }
+      });
+
+
+
+      // Edición inline de “periodo”
+      $(document).on('click', '.periodo-cell', function() {
+        const cell = $(this);
+        const id = cell.data('id');
+        const original = cell.text().trim();
+        if (cell.find('input').length) return; // ya en edición
+
+        cell.html('<input type="text" class="form-control form-control-sm periodo-input" value="' + original + '">');
+        const input = cell.find('input')[0];
+
+        flatpickr(input, {
+          dateFormat: 'Y-m-d',
+          defaultDate: original,
+          onClose: function(selectedDates, dateStr) {
+            if (!dateStr || dateStr === original) {
+              cell.text(original);
+              return;
+            }
+            const data = {
+              id_historial: id,
+              periodo: dateStr
+            };
+            data[csrfName] = csrfHash;
+
+            $.ajax({
+              url: '<?= base_url('jefatura/editarPeriodoEquipo') ?>',
+              type: 'POST',
+              dataType: 'json',
+              data: data,
+              success: function(res) {
+                if (res.success) {
+                  cell.text(dateStr);
+                } else {
+                  alert(res.message || 'No se pudo actualizar.');
+                  cell.text(original);
+                }
+              },
+              error: function() {
+                alert('Error al comunicar con el servidor.');
+                cell.text(original);
+              }
+            });
+          }
+        }).open();
       });
     });
   </script>

@@ -204,6 +204,8 @@ $routes->get('resetear/(:segment)', 'AuthController::formResetear/$1');
 $routes->post('resetear', 'AuthController::procesarResetear');
 $routes->post('resetear/(:segment)', 'AuthController::procesarResetear/$1');
 
+$routes->post('jefatura/editarPeriodoEquipo', 'JefaturaController::editarPeriodoEquipo');
+
 
 
 

@@ -93,6 +93,7 @@
         <table id="historialTable" class="table table-bordered table-striped align-middle nowrap w-100">
           <thead class="table-dark">
             <tr>
+              <th>Periodo</th>
               <th>Colaborador</th>
               <th>Indicador</th>
               <th>Meta Valor</th>
@@ -120,6 +121,8 @@
           <tbody>
             <?php foreach($equipo as $r): ?>
             <tr>
+              <td data-bs-toggle="tooltip" title="<?= esc($r['periodo']) ?>">
+                <?= esc($r['periodo']) ?></td>
               <td data-bs-toggle="tooltip" title="<?= esc($r['nombre_completo']) ?>">
                 <?= esc($r['nombre_completo']) ?></td>
               <td data-bs-toggle="tooltip" title="<?= esc($r['nombre_indicador']) ?>">
@@ -259,7 +262,7 @@
       lengthMenu: [[5,10,20,50,100],[5,10,20,50,100]],
       scrollX: true,
       buttons: [{ extend: 'excelHtml5', title: 'Historial_Equipo' }],
-      order: [[16, 'desc']],
+      order: [[0, 'desc']],
       columnDefs: [{ targets: hiddenCols, visible: false }],
       initComplete: initTooltips,
       drawCallback: initTooltips

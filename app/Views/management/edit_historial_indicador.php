@@ -1,8 +1,9 @@
+<!-- app/Views/management/edit_historial_indicador.php -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Editar Historial Indicador – Afilogro</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
@@ -14,28 +15,52 @@
 
     <?php if (session()->getFlashdata('errors')): ?>
       <div class="alert alert-danger">
-        <?php foreach (session()->getFlashdata('errors') as $e): ?><p><?= esc($e) ?></p><?php endforeach; ?>
+        <?php foreach (session()->getFlashdata('errors') as $e): ?>
+          <p><?= esc($e) ?></p>
+        <?php endforeach; ?>
       </div>
     <?php endif; ?>
 
     <form action="<?= base_url('historial_indicador/edit/' . $record['id_historial']) ?>" method="post">
       <?= csrf_field() ?>
 
+      <!-- Editable: Periodo primero -->
+      <div class="mb-3">
+        <label for="periodo" class="form-label">Periodo (YYYY-MM-DD)</label>
+        <input
+          type="date"
+          id="periodo"
+          name="periodo"
+          class="form-control"
+          value="<?= old('periodo', esc($record['periodo'])) ?>"
+          required>
+      </div>
+
+          <div class="mb-3">
+        <label for="cumple" class="form-label">Cumple</label>
+        <select id="cumple" name="cumple" class="form-select">
+          <option value="1" <?= old('cumple', $record['cumple']) == 1 ? 'selected' : '' ?>>Sí</option>
+          <option value="0" <?= old('cumple', $record['cumple']) == 0 ? 'selected' : '' ?>>No</option>
+        </select>
+      </div>
+
       <!-- Asignación Indicador x Perfil -->
       <div class="mb-3">
-        <label class="form-label">Asignación Indicador x Perfil</label>
-        <select name="id_indicador_perfil" class="form-select" required>
+        <label for="id_indicador_perfil" class="form-label">Asignación Indicador x Perfil</label>
+        <select
+          id="id_indicador_perfil"
+          name="id_indicador_perfil"
+          class="form-select"
+          required>
           <?php foreach ($asignaciones as $a): ?>
-            <option value="<?= esc($a['id_indicador_perfil']) ?>"
+            <option
+              value="<?= esc($a['id_indicador_perfil']) ?>"
               <?= $a['id_indicador_perfil'] == $record['id_indicador_perfil'] ? 'selected' : '' ?>>
               <?= esc($a['nombre_indicador']) ?> |
               Periodicidad: <?= esc($a['periodicidad']) ?> |
               Ponderación: <?= esc($a['ponderacion']) ?>% |
               Meta Valor: <?= esc($a['meta_valor']) ?> |
-              Meta Desc: <?= esc($a['meta_descripcion']) ?> |
-              Tipo Meta: <?= isset($a['tipo_meta']) ? esc($a['tipo_meta']) : '' ?> ?> |
-              Método: <?= esc($a['metodo_calculo']) ?> |
-              Unidad: <?= esc($a['unidad']) ?>
+              Meta Desc: <?= esc($a['meta_descripcion']) ?>
             </option>
           <?php endforeach; ?>
         </select>
@@ -43,10 +68,16 @@
 
       <!-- Usuario -->
       <div class="mb-3">
-        <label class="form-label">Usuario</label>
-        <select name="id_usuario" class="form-select" required>
+        <label for="id_usuario" class="form-label">Usuario</label>
+        <select
+          id="id_usuario"
+          name="id_usuario"
+          class="form-select"
+          required>
           <?php foreach ($users as $u): ?>
-            <option value="<?= esc($u['id_users']) ?>" <?= set_select('id_usuario', $u['id_users'], $record['id_usuario'] == $u['id_users']) ?>>
+            <option
+              value="<?= esc($u['id_users']) ?>"
+              <?= set_select('id_usuario', $u['id_users'], $record['id_usuario'] == $u['id_users']) ?>>
               <?= esc($u['nombre_completo']) ?>
             </option>
           <?php endforeach; ?>
@@ -101,25 +132,36 @@
         </div>
       </div>
 
-      <!-- Editable: Periodo, JSON, Resultado, Comentario -->
+      <!-- Editable: Valores JSON, Resultado, Comentario -->
       <div class="mb-3">
-        <label class="form-label">Periodo (YYYY-MM)</label>
-        <input type="month" name="periodo" class="form-control" value="<?= old('periodo', esc($record['periodo'])) ?>" required>
+        <label for="valores_json" class="form-label">Valores JSON</label>
+        <textarea
+          id="valores_json"
+          name="valores_json"
+          class="form-control"
+          rows="2"
+          required><?= old('valores_json', esc($record['valores_json'])) ?></textarea>
       </div>
 
       <div class="mb-3">
-        <label class="form-label">Valores JSON</label>
-        <textarea name="valores_json" class="form-control" rows="2" required><?= old('valores_json', esc($record['valores_json'])) ?></textarea>
+        <label for="resultado_real" class="form-label">Resultado Real</label>
+        <input
+          type="number"
+          step="any"
+          id="resultado_real"
+          name="resultado_real"
+          class="form-control"
+          value="<?= old('resultado_real', esc($record['resultado_real'])) ?>"
+          required>
       </div>
 
       <div class="mb-3">
-        <label class="form-label">Resultado Real</label>
-        <input type="number" step="any" name="resultado_real" class="form-control" value="<?= old('resultado_real', esc($record['resultado_real'])) ?>" required>
-      </div>
-
-      <div class="mb-3">
-        <label class="form-label">Comentario</label>
-        <textarea name="comentario" class="form-control" rows="2"><?= old('comentario', esc($record['comentario'])) ?></textarea>
+        <label for="comentario" class="form-label">Comentario</label>
+        <textarea
+          id="comentario"
+          name="comentario"
+          class="form-control"
+          rows="2"><?= old('comentario', esc($record['comentario'])) ?></textarea>
       </div>
 
       <button type="submit" class="btn btn-primary">Actualizar Registro</button>

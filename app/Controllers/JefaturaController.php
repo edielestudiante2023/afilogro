@@ -334,10 +334,9 @@ class JefaturaController extends BaseController
     public function losIndicadoresDeMiEquipo()
     {
         // 1) Filtros de rango de fecha
-        $fechaDesde = $this->request->getGet('fecha_desde') ?? date('Y-m-01');
+        $fechaDesde    = $this->request->getGet('fecha_desde') ?? date('Y-m-01');
         $fechaHastaRaw = $this->request->getGet('fecha_hasta') ?? date('Y-m-d');
-        $fechaHasta = $fechaHastaRaw . ' 23:59:59';
-
+        $fechaHasta    = $fechaHastaRaw . ' 23:59:59';
 
         // 2) IDs de subordinados + el jefe
         $jefeId = session()->get('id_users');
@@ -345,10 +344,11 @@ class JefaturaController extends BaseController
         $subIds = array_column($subs, 'id_users');
         $subIds[] = $jefeId;
 
-        // 3) Consulta de indicadores en el rango de fecha
+        // 3) Consulta de indicadores en el rango de fecha (ahora incluyendo periodo)
         $equipo = $this->histModel
             ->select([
                 'historial_indicadores.id_historial',
+                'historial_indicadores.periodo',
                 'i.id_indicador       AS id_indicador',
                 'usuarios.nombre_completo AS nombre_completo',
                 'i.nombre             AS nombre_indicador',
@@ -359,24 +359,14 @@ class JefaturaController extends BaseController
                 'historial_indicadores.resultado_real',
                 'historial_indicadores.comentario',
             ])
-            // no usamos from(), el modelo ya sabe de qué tabla viene
-            ->join(
-                'indicadores_perfil ip',
-                'ip.id_indicador_perfil = historial_indicadores.id_indicador_perfil'
-            )
-            ->join(
-                'indicadores i',
-                'i.id_indicador = ip.id_indicador'
-            )
-            ->join(
-                'users AS usuarios',
-                'usuarios.id_users = historial_indicadores.id_usuario'
-            )
+            ->join('indicadores_perfil ip', 'ip.id_indicador_perfil = historial_indicadores.id_indicador_perfil')
+            ->join('indicadores i',            'i.id_indicador = ip.id_indicador')
+            ->join('users AS usuarios',        'usuarios.id_users = historial_indicadores.id_usuario')
             ->whereIn('historial_indicadores.id_usuario', $subIds)
             ->where('historial_indicadores.fecha_registro >=', $fechaDesde)
             ->where('historial_indicadores.fecha_registro <=', $fechaHasta)
+            ->orderBy('historial_indicadores.periodo', 'DESC')
             ->orderBy('usuarios.nombre_completo', 'ASC')
-            ->orderBy('historial_indicadores.fecha_registro', 'DESC')
             ->findAll();
 
         // 4) Precargar partes de fórmula
@@ -391,23 +381,17 @@ class JefaturaController extends BaseController
             }
         }
 
-
-        // 5) Renderizar vista
+        // 5) Renderizar vista (pasamos fecha_hasta sin hora para el input)
         return view('jefatura/losindicadoresdemiequipo', [
             'equipo'      => $equipo,
             'fecha_desde' => $fechaDesde,
-            'fecha_hasta' => $fechaHasta,
+            'fecha_hasta' => $fechaHastaRaw,
             'formulas'    => $formulas,
         ]);
     }
 
 
 
-
-
-    /**
-     * Procesa la edición rápida y guarda los cambios + auditoría
-     */
     public function guardarIndicadoresDeEquipo()
     {
         $jefeId  = session()->get('id_users');
@@ -488,8 +472,8 @@ class JefaturaController extends BaseController
                 'users.id_users = historial_indicadores.id_usuario'
             )
             ->where('historial_indicadores.id_usuario', $userId)
-            ->where('historial_indicadores.fecha_registro >=', $fechaDesde . ' 00:00:00')
-            ->where('historial_indicadores.fecha_registro <=', $fechaHasta . ' 23:59:59')
+            ->where('historial_indicadores.fecha_registro >=', $fechaDesde)
+            ->where('historial_indicadores.fecha_registro <=', $fechaHasta)
             ->orderBy('historial_indicadores.fecha_registro', 'DESC')
             ->findAll();
 
@@ -557,15 +541,16 @@ class JefaturaController extends BaseController
                     'historial_indicadores.comentario',
                     'historial_indicadores.valores_json',
                     'historial_indicadores.fecha_registro',
+                    'historial_indicadores.periodo',
                 ])
 
                 ->join('indicadores_perfil', 'indicadores_perfil.id_indicador_perfil = historial_indicadores.id_indicador_perfil')
                 ->join('indicadores',         'indicadores.id_indicador = indicadores_perfil.id_indicador')
                 ->join('users',               'users.id_users = historial_indicadores.id_usuario')
                 ->whereIn('historial_indicadores.id_usuario', $subsIds)
-                ->where('historial_indicadores.fecha_registro >=', $fechaDesde . ' 00:00:00')
-                ->where('historial_indicadores.fecha_registro <=', $fechaHasta . ' 23:59:59')
-                ->orderBy('historial_indicadores.fecha_registro', 'DESC')
+                ->where('historial_indicadores.periodo >=', $fechaDesde)
+                ->where('historial_indicadores.periodo <=', $fechaHasta)
+                ->orderBy('historial_indicadores.periodo', 'DESC')
                 ->findAll();
         }
 
@@ -731,5 +716,45 @@ class JefaturaController extends BaseController
         ]);
 
         return redirect()->to('jefatura/historialmisindicadoresfeje')->with('success', 'Resultado guardado correctamente.');
+    }
+
+    public function editarPeriodoEquipo()
+    {
+        if (! $this->request->isAJAX()) {
+            return $this->response
+                ->setStatusCode(400)
+                ->setJSON(['success' => false, 'message' => 'Solicitud inválida.']);
+        }
+
+        $id    = $this->request->getPost('id_historial');
+        $nuevo = $this->request->getPost('periodo');
+        if (! $id || ! $nuevo) {
+            return $this->response
+                ->setStatusCode(400)
+                ->setJSON(['success' => false, 'message' => 'Parámetros faltantes.']);
+        }
+
+        $old = $this->histModel->find($id);
+
+        try {
+            $this->histModel->update($id, ['periodo' => $nuevo]);
+
+            // Auditoría solo si cambió realmente
+            if ($old['periodo'] !== $nuevo) {
+                $this->auditModel->insert([
+                    'id_historial'   => $id,
+                    'editor_id'      => session()->get('id_users'),
+                    'campo'          => 'periodo',
+                    'valor_anterior' => $old['periodo'],
+                    'valor_nuevo'    => $nuevo,
+                ]);
+            }
+
+            return $this->response->setJSON(['success' => true]);
+        } catch (\Exception $e) {
+            return $this->response
+                ->setStatusCode(500)
+                ->setJSON(['success' => false, 'message' => 'Error al actualizar.']);
+        }
     }
 }
