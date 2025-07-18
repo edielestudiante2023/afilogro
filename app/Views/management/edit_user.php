@@ -103,13 +103,17 @@
                         </div>
                         <div class="col-md-4 mb-3">
                             <label for="id_areas" class="form-label">Área <span class="text-danger">*</span></label>
-
-                            <select id="id_areas" name="id_areas" class="form-select">
+                            <select id="id_areas" name="id_areas" class="form-select" required>
                                 <option value="">-- Seleccione --</option>
-                                <option value="1" <?= set_select('id_areas', '1', $user['id_areas'] == 1) ?>>Gestión Humana</option>
-                                <!-- Añade aquí otras áreas según tu tabla -->
+                                <?php foreach ($areas as $area): ?>
+                                    <option value="<?= esc($area['id_areas']) ?>"
+                                        <?= set_select('id_areas', $area['id_areas'], $user['id_areas'] == $area['id_areas']) ?>>
+                                        <?= esc($area['nombre_area']) ?>
+                                    </option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
+
                         <div class="col-md-4 mb-3">
                             <label for="id_perfil_cargo" class="form-label">Perfil de cargo</label>
                             <select id="id_perfil_cargo" name="id_perfil_cargo" class="form-select" required>
