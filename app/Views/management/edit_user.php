@@ -12,7 +12,16 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-
+    <style>
+      /* Para que Select2 se acople bien dentro de Bootstrap */
+      .select2-container .select2-selection--single {
+        height: calc(1.5em + .75rem + 2px);
+        padding: .375rem .75rem;
+      }
+      .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: calc(1.5em + .75rem + 2px);
+      }
+    </style>
 </head>
 
 <body>
@@ -93,8 +102,9 @@
                     <div class="row">
                         <div class="col-md-4 mb-3">
                             <label for="id_roles" class="form-label">Rol</label>
-                            <select id="id_roles" name="id_roles" class="form-select" required>
-                                <option value="">-- Seleccione --</option>
+                            <select id="id_roles" name="id_roles" class="form-select select2" required
+                                    data-placeholder="Seleccione un rol">
+                                <option value=""></option>
                                 <option value="1" <?= set_select('id_roles', '1', $user['id_roles'] == 1) ?>>Superadmin</option>
                                 <option value="2" <?= set_select('id_roles', '2', $user['id_roles'] == 2) ?>>Admin</option>
                                 <option value="3" <?= set_select('id_roles', '3', $user['id_roles'] == 3) ?>>Jefatura</option>
@@ -103,8 +113,9 @@
                         </div>
                         <div class="col-md-4 mb-3">
                             <label for="id_areas" class="form-label">Área <span class="text-danger">*</span></label>
-                            <select id="id_areas" name="id_areas" class="form-select" required>
-                                <option value="">-- Seleccione --</option>
+                            <select id="id_areas" name="id_areas" class="form-select select2" required
+                                    data-placeholder="Seleccione un área">
+                                <option value=""></option>
                                 <?php foreach ($areas as $area): ?>
                                     <option value="<?= esc($area['id_areas']) ?>"
                                         <?= set_select('id_areas', $area['id_areas'], $user['id_areas'] == $area['id_areas']) ?>>
@@ -113,11 +124,11 @@
                                 <?php endforeach; ?>
                             </select>
                         </div>
-
                         <div class="col-md-4 mb-3">
                             <label for="id_perfil_cargo" class="form-label">Perfil de cargo</label>
-                            <select id="id_perfil_cargo" name="id_perfil_cargo" class="form-select" required>
-                                <option value="">-- Seleccione --</option>
+                            <select id="id_perfil_cargo" name="id_perfil_cargo" class="form-select select2" required
+                                    data-placeholder="Seleccione un perfil">
+                                <option value=""></option>
                                 <?php foreach ($perfiles_cargo as $p): ?>
                                     <option value="<?= esc($p['id_perfil_cargo']) ?>"
                                         <?= set_select('id_perfil_cargo', $p['id_perfil_cargo'], $user['id_perfil_cargo'] == $p['id_perfil_cargo']) ?>>
@@ -126,29 +137,30 @@
                                 <?php endforeach; ?>
                             </select>
                         </div>
+                    </div>
 
-                        <div class="mb-3">
-                            <label for="id_jefe" class="form-label">Jefe Inmediato</label>
-                            <select id="id_jefe" name="id_jefe" class="form-select select2">
-                                <option value="">-- Ninguno --</option>
-                                <?php foreach ($jefes as $j): ?>
-                                    <option value="<?= esc($j['id_users']) ?>"
-                                        <?= old('id_jefe') == $j['id_users'] ? 'selected' : '' ?>>
-                                        <?= esc($j['nombre_completo']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
+                    <div class="mb-3">
+                        <label for="id_jefe" class="form-label">Jefe Inmediato</label>
+                        <select id="id_jefe" name="id_jefe" class="form-select select2"
+                                data-placeholder="Seleccione un jefe">
+                            <option value=""></option>
+                            <?php foreach ($jefes as $j): ?>
+                                <option value="<?= esc($j['id_users']) ?>"
+                                    <?= old('id_jefe', $user['id_jefe']) == $j['id_users'] ? 'selected' : '' ?>>
+                                    <?= esc($j['nombre_completo']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
 
-
-
-                        <div class="col-md-4 mb-3">
-                            <label for="activo" class="form-label">Estado</label>
-                            <select id="activo" name="activo" class="form-select" required>
-                                <option value="1" <?= set_select('activo', '1', $user['activo'] == 1) ?>>Activo</option>
-                                <option value="0" <?= set_select('activo', '0', $user['activo'] == 0) ?>>Inactivo</option>
-                            </select>
-                        </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="activo" class="form-label">Estado</label>
+                        <select id="activo" name="activo" class="form-select select2" required
+                                data-placeholder="Seleccione estado">
+                            <option value=""></option>
+                            <option value="1" <?= set_select('activo', '1', $user['activo'] == 1) ?>>Activo</option>
+                            <option value="0" <?= set_select('activo', '0', $user['activo'] == 0) ?>>Inactivo</option>
+                        </select>
                     </div>
 
                     <div class="d-flex justify-content-end mt-4">
@@ -163,12 +175,12 @@
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- jQuery (ya está en tu proyecto por DataTables) -->
+    <!-- jQuery (ya incluido por DataTables en tu proyecto) -->
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-    <!-- Script para toggle de contraseña -->
     <script>
+        // Toggle de visibilidad de contraseña
         document.querySelectorAll('.toggle-password').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 const input = this.closest('.input-group').querySelector('input');
@@ -182,11 +194,16 @@
                 }
             });
         });
+
+        // Inicialización de todos los select2
         $(document).ready(function() {
-            $('.select2').select2({
-                placeholder: "Seleccione un jefe",
-                allowClear: true,
-                width: '100%'
+            $('.select2').each(function() {
+                const placeholder = $(this).data('placeholder') || 'Seleccione una opción';
+                $(this).select2({
+                    placeholder: placeholder,
+                    allowClear: true,
+                    width: '100%'
+                });
             });
         });
     </script>
