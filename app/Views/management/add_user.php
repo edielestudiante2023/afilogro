@@ -4,74 +4,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nuevo Usuario – Afilogro</title>
-    <!-- Bootstrap 5 CSS -->
+    <title>Crear Nuevo Usuario – Afilogro</title>
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <!-- Select2 Bootstrap 5 Theme -->
+    <!-- Select2 Bootstrap 5 Theme -->
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <style>
-        /* Indicar invalid state */
+        /* Ajustes de altura y padding para encajar en Bootstrap 5 */
+        .select2-container .select2-selection--single {
+            height: calc(1.5em + .75rem + 2px);
+            padding: .375rem .75rem;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: calc(1.5em + .75rem + 2px);
+        }
+        /* Indicar estado inválido */
         .select2-container.is-invalid .select2-selection {
             border-color: #dc3545 !important;
-        }
-        
-        /* Mejorar la compatibilidad con Bootstrap 5 */
-        .select2-container--bootstrap-5 .select2-selection {
-            min-height: calc(1.5em + 0.75rem + 2px);
         }
     </style>
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="#">Afilogro</a>
-        </div>
-    </nav>
+    <?= $this->include('partials/nav') ?>
 
     <div class="container py-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3">Crear Nuevo Usuario</h1>
-            <a href="#" class="btn btn-secondary">
+            <a href="<?= base_url('users') ?>" class="btn btn-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Volver al listado
             </a>
         </div>
 
         <!-- Errores de validación del servidor -->
-        <div class="alert alert-danger d-none" id="error-alert">
-            <ul class="mb-0" id="error-list"></ul>
-        </div>
+        <?php if (session()->getFlashdata('errors')): ?>
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    <?php foreach (session()->getFlashdata('errors') as $error): ?>
+                        <li><?= esc($error) ?></li>
+                    <?php endforeach ?>
+                </ul>
+            </div>
+        <?php endif; ?>
 
         <div class="card shadow-sm">
             <div class="card-body">
-                <form id="form-add-user" action="#" method="post" novalidate>
+                <form id="form-add-user" action="<?= base_url('users/add') ?>" method="post" novalidate>
+                    <?= csrf_field() ?>
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="nombre_completo" class="form-label">Nombre completo</label>
                             <input type="text" id="nombre_completo" name="nombre_completo"
-                                   class="form-control" value="" required>
+                                   class="form-control" value="<?= old('nombre_completo') ?>" required>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="documento_identidad" class="form-label">Documento de identidad</label>
                             <input type="text" id="documento_identidad" name="documento_identidad"
-                                   class="form-control" value="" required>
+                                   class="form-control" value="<?= old('documento_identidad') ?>" required>
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label for="correo" class="form-label">Correo electrónico</label>
                         <input type="email" id="correo" name="correo"
-                               class="form-control" value="" required>
+                               class="form-control" value="<?= old('correo') ?>" required>
                     </div>
 
                     <div class="mb-3">
                         <label for="cargo" class="form-label">Cargo</label>
                         <input type="text" id="cargo" name="cargo"
-                               class="form-control" value="" required>
+                               class="form-control" value="<?= old('cargo') ?>" required>
                     </div>
 
                     <div class="mb-3">
@@ -88,45 +95,52 @@
                     <div class="row">
                         <!-- Rol (requerido) -->
                         <div class="col-md-4 mb-3">
-                            <label for="id_roles" class="form-label">Rol <span class="text-danger">*</span></label>
+                            <label for="id_roles" class="form-label">Rol</label>
                             <select id="id_roles" name="id_roles"
                                     class="form-select select2"
                                     data-placeholder="Seleccione un rol"
                                     data-required="true">
                                 <option value=""></option>
-                                <option value="1">Administrador</option>
-                                <option value="2">Supervisor</option>
-                                <option value="3">Empleado</option>
+                                <?php foreach ($roles as $role): ?>
+                                    <option value="<?= esc($role['id_roles']) ?>"
+                                        <?= old('id_roles') == $role['id_roles'] ? 'selected' : '' ?>>
+                                        <?= esc($role['nombre_rol']) ?>
+                                    </option>
+                                <?php endforeach ?>
                             </select>
                         </div>
 
                         <!-- Área (requerido) -->
                         <div class="col-md-4 mb-3">
-                            <label for="id_areas" class="form-label">Área <span class="text-danger">*</span></label>
+                            <label for="id_areas" class="form-label">Área</label>
                             <select id="id_areas" name="id_areas"
                                     class="form-select select2"
                                     data-placeholder="Seleccione un área"
                                     data-required="true">
                                 <option value=""></option>
-                                <option value="1">Recursos Humanos</option>
-                                <option value="2">Tecnología</option>
-                                <option value="3">Ventas</option>
-                                <option value="4">Marketing</option>
+                                <?php foreach ($areas as $area): ?>
+                                    <option value="<?= esc($area['id_areas']) ?>"
+                                        <?= old('id_areas') == $area['id_areas'] ? 'selected' : '' ?>>
+                                        <?= esc($area['nombre_area']) ?>
+                                    </option>
+                                <?php endforeach ?>
                             </select>
                         </div>
 
                         <!-- Perfil de cargo (requerido) -->
                         <div class="col-md-4 mb-3">
-                            <label for="id_perfil_cargo" class="form-label">Perfil de Cargo <span class="text-danger">*</span></label>
+                            <label for="id_perfil_cargo" class="form-label">Perfil de Cargo</label>
                             <select id="id_perfil_cargo" name="id_perfil_cargo"
                                     class="form-select select2"
                                     data-placeholder="Seleccione un perfil de cargo"
                                     data-required="true">
                                 <option value=""></option>
-                                <option value="1">Gerente</option>
-                                <option value="2">Coordinador</option>
-                                <option value="3">Analista</option>
-                                <option value="4">Asistente</option>
+                                <?php foreach ($perfiles_cargo as $p): ?>
+                                    <option value="<?= esc($p['id_perfil_cargo']) ?>"
+                                        <?= old('id_perfil_cargo') == $p['id_perfil_cargo'] ? 'selected' : '' ?>>
+                                        <?= esc($p['nombre_cargo']) ?>
+                                    </option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
@@ -138,22 +152,25 @@
                                 class="form-select select2"
                                 data-placeholder="Seleccione un jefe">
                             <option value=""></option>
-                            <option value="1">Juan Pérez</option>
-                            <option value="2">María García</option>
-                            <option value="3">Carlos López</option>
+                            <?php foreach ($jefes as $j): ?>
+                                <option value="<?= esc($j['id_users']) ?>"
+                                    <?= old('id_jefe') == $j['id_users'] ? 'selected' : '' ?>>
+                                    <?= esc($j['nombre_completo']) ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
 
                     <!-- Estado (requerido) -->
                     <div class="col-md-4 mb-3">
-                        <label for="activo" class="form-label">Estado <span class="text-danger">*</span></label>
+                        <label for="activo" class="form-label">Estado</label>
                         <select id="activo" name="activo"
                                 class="form-select select2"
                                 data-placeholder="Seleccione estado"
                                 data-required="true">
                             <option value=""></option>
-                            <option value="1" selected>Activo</option>
-                            <option value="0">Inactivo</option>
+                            <option value="1" <?= old('activo') === '1' ? 'selected' : '' ?>>Activo</option>
+                            <option value="0" <?= old('activo') === '0' ? 'selected' : '' ?>>Inactivo</option>
                         </select>
                     </div>
 
@@ -167,22 +184,19 @@
         </div>
     </div>
 
-    <!-- jQuery (Versión corregida) -->
+    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Bootstrap 5 JS -->
+    <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
     $(document).ready(function() {
-        console.log('jQuery loaded:', typeof $ !== 'undefined');
-        console.log('Select2 loaded:', typeof $.fn.select2 !== 'undefined');
-        
         // Toggle de visibilidad de contraseña
         $('.toggle-password').on('click', function() {
             const $input = $(this).closest('.input-group').find('input');
-            const $icon = $(this).find('i');
+            const $icon  = $(this).find('i');
             if ($input.attr('type') === 'password') {
                 $input.attr('type', 'text');
                 $icon.removeClass('bi-eye-fill').addClass('bi-eye-slash-fill');
@@ -192,82 +206,33 @@
             }
         });
 
-        // Inicializar Select2 con configuración corregida
+        // Inicializar todos los select2 con tema Bootstrap 5 y placeholder dinámico
         $('.select2').each(function() {
             const $select = $(this);
             const placeholder = $select.data('placeholder') || 'Seleccione una opción';
-            
             $select.select2({
                 theme: 'bootstrap-5',
                 placeholder: placeholder,
                 allowClear: true,
-                width: '100%',
-                language: {
-                    noResults: function() {
-                        return "No se encontraron resultados";
-                    }
-                }
+                width: '100%'
             });
         });
 
         // Validación personalizada para los select2 marcados como required
         $('#form-add-user').on('submit', function(e) {
-            e.preventDefault(); // Prevenir envío para demo
-            
             let valid = true;
-            let errors = [];
-            
-            // Validar campos de texto requeridos
-            $(this).find('input[required]').each(function() {
-                if (!$(this).val().trim()) {
-                    valid = false;
-                    $(this).addClass('is-invalid');
-                    errors.push(`El campo ${$(this).prev('label').text()} es obligatorio`);
-                } else {
-                    $(this).removeClass('is-invalid');
-                }
-            });
-            
-            // Validar select2 requeridos
             $('.select2').each(function() {
-                const $select = $(this);
-                const $container = $select.next('.select2-container');
-                
-                if ($select.data('required') && (!$select.val() || $select.val().length === 0)) {
+                if ($(this).data('required') && (!$(this).val() || $(this).val().length === 0)) {
                     valid = false;
-                    $container.addClass('is-invalid');
-                    const label = $select.prev('label').text().replace('*', '').trim();
-                    errors.push(`El campo ${label} es obligatorio`);
+                    $(this).next('.select2-container').addClass('is-invalid');
                 } else {
-                    $container.removeClass('is-invalid');
+                    $(this).next('.select2-container').removeClass('is-invalid');
                 }
             });
-            
             if (!valid) {
-                // Mostrar errores
-                $('#error-list').empty();
-                errors.forEach(error => {
-                    $('#error-list').append(`<li>${error}</li>`);
-                });
-                $('#error-alert').removeClass('d-none');
-                
-                // Scroll al primer error
-                $('html, body').animate({
-                    scrollTop: $('#error-alert').offset().top - 100
-                }, 300);
-            } else {
-                $('#error-alert').addClass('d-none');
-                alert('Formulario válido. En producción se enviaría al servidor.');
+                e.preventDefault();
+                alert('Por favor completa todos los campos obligatorios.');
             }
-        });
-        
-        // Limpiar errores al cambiar valores
-        $('input').on('input', function() {
-            $(this).removeClass('is-invalid');
-        });
-        
-        $('.select2').on('change', function() {
-            $(this).next('.select2-container').removeClass('is-invalid');
         });
     });
     </script>
