@@ -127,11 +127,18 @@
             </div>
 
 
-            <button type="submit" class="btn btn-success">Guardar Parte</button>
-            <a href="<?= site_url('partesformula/list') ?>" class="btn btn-secondary ms-2">Ver Lista</a>
+                        <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success">Guardar Parte</button>
 
+                <a href="<?= site_url('partesformula/list') ?>" class="btn btn-secondary">
+                    Ver Lista
+                </a>
 
-            
+                <a href="<?= site_url('indicadores') ?>" class="btn btn-primary">
+                    <i class="bi bi-list-check me-1"></i> Ir a Indicadores
+                </a>
+            </div>
+
         </form>
     </div>
 
@@ -189,21 +196,21 @@
         });
     </script>
     <script>
-    const BASE_URL = <?= json_encode(base_url()) ?>;
-    const idIndicador = <?= json_encode($id_indicador_seleccionado) ?>;
+        const BASE_URL = <?= json_encode(base_url()) ?>;
+        const idIndicador = <?= json_encode($id_indicador_seleccionado) ?>;
 
-    function actualizarOrdenAutomaticamente() {
-        if (!idIndicador) return;
+        function actualizarOrdenAutomaticamente() {
+            if (!idIndicador) return;
 
-        fetch(`${BASE_URL}/partesformula/nextorden/${idIndicador}`)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('orden').value = data.next_orden;
-            });
-    }
+            fetch(`${BASE_URL}/partesformula/nextorden/${idIndicador}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('orden').value = data.next_orden;
+                });
+        }
 
-    document.addEventListener('DOMContentLoaded', actualizarOrdenAutomaticamente);
-</script>
+        document.addEventListener('DOMContentLoaded', actualizarOrdenAutomaticamente);
+    </script>
 
 
 
