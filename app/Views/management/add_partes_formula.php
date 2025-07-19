@@ -129,6 +129,9 @@
 
             <button type="submit" class="btn btn-success">Guardar Parte</button>
             <a href="<?= site_url('partesformula/list') ?>" class="btn btn-secondary ms-2">Ver Lista</a>
+
+
+            
         </form>
     </div>
 
