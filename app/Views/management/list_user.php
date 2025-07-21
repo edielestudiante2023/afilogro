@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,29 +16,34 @@
     <!-- DataTables Buttons CSS -->
     <link href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css" rel="stylesheet">
     <style>
-        html, body {
+        html,
+        body {
             height: 100%;
             margin: 0;
             padding: 0;
         }
+
         .container-fluid {
             height: 100%;
             display: flex;
             flex-direction: column;
             padding: 0;
         }
+
         .table-container {
             flex: 1;
             overflow: hidden;
         }
+
         .dataTables_scrollBody {
             overflow: auto;
         }
     </style>
 </head>
+
 <body>
 
-<?= $this->include('partials/nav') ?>
+    <?= $this->include('partials/nav') ?>
 
     <div class="container-fluid">
         <!-- Encabezado -->
@@ -127,10 +133,10 @@
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-center">
-                                    <a href="<?= base_url('users/edit/'.$u['id_users']) ?>" class="btn btn-sm btn-warning me-1" title="Editar">
+                                    <a href="<?= base_url('users/edit/' . $u['id_users']) ?>" class="btn btn-sm btn-warning me-1" title="Editar">
                                         <i class="bi bi-pencil-fill"></i>
                                     </a>
-                                    <a href="<?= base_url('users/delete/'.$u['id_users']) ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar a <?= esc($u['nombre_completo']) ?>?')" title="Eliminar">
+                                    <a href="<?= base_url('users/delete/' . $u['id_users']) ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar a <?= esc($u['nombre_completo']) ?>?')" title="Eliminar">
                                         <i class="bi bi-trash-fill"></i>
                                     </a>
                                 </td>
@@ -159,53 +165,57 @@
 
     <!-- DataTable Initialization -->
     <script>
-    $(document).ready(function() {
-        var table = $('#userTable').DataTable({
-            dom: 'Bfrtip',
-            buttons: [
-                {
+        $(document).ready(function() {
+            var table = $('#userTable').DataTable({
+                dom: 'Blfrtip', // ← Agregamos la 'l' para mostrar el selector de longitud
+                pageLength: 25, // ← Cantidad inicial de registros
+                lengthMenu: [
+                    [10, 25, 50, 100, -1],
+                    [10, 25, 50, 100, "Todos"]
+                ], // ← Agregamos el menú de opciones
+                buttons: [{
                     extend: 'excelHtml5',
                     text: 'Exportar a Excel',
                     titleAttr: 'Exportar a Excel',
                     className: 'btn btn-success btn-sm'
-                }
-            ],
-            responsive: true,
-            scrollY: 'calc(100vh - 150px)',
-            scrollX: true,
-            scrollCollapse: true,
-            paging: true,
-            autoWidth: false,
-            language: {
-                search: "Buscar:",
-                lengthMenu: "Mostrar _MENU_ registros",
-                info: "Mostrando _START_ a _END_ de _TOTAL_ usuarios",
-                paginate: {
-                    first: "Primero",
-                    last: "Último",
-                    next: "Siguiente",
-                    previous: "Anterior"
+                }],
+                responsive: true,
+                scrollY: 'calc(100vh - 150px)',
+                scrollX: true,
+                scrollCollapse: true,
+                paging: true,
+                autoWidth: false,
+                language: {
+                    search: "Buscar:",
+                    lengthMenu: "Mostrar _MENU_ registros", // ← Texto para el selector
+                    info: "Mostrando _START_ a _END_ de _TOTAL_ usuarios",
+                    paginate: {
+                        first: "Primero",
+                        last: "Último",
+                        next: "Siguiente",
+                        previous: "Anterior"
+                    },
+                    zeroRecords: "No se encontraron registros",
+                    infoEmpty: "Mostrando 0 a 0 de 0 usuarios",
+                    infoFiltered: "(filtrado de _MAX_ total usuarios)"
                 },
-                zeroRecords: "No se encontraron registros",
-                infoEmpty: "Mostrando 0 a 0 de 0 usuarios",
-                infoFiltered: "(filtrado de _MAX_ total usuarios)"
-            },
-            initComplete: function () {
-                this.api().columns().every(function () {
-                    var column = this;
-                    var input = $('<input type="text" class="form-control form-control-sm" placeholder="Buscar..." />')
-                        .appendTo($(column.footer()).empty())
-                        .on('keyup change clear', function () {
-                            if (column.search() !== this.value) {
-                                column.search(this.value).draw();
-                            }
-                        });
-                });
-            }
+                initComplete: function() {
+                    this.api().columns().every(function() {
+                        var column = this;
+                        var input = $('<input type="text" class="form-control form-control-sm" placeholder="Buscar..." />')
+                            .appendTo($(column.footer()).empty())
+                            .on('keyup change clear', function() {
+                                if (column.search() !== this.value) {
+                                    column.search(this.value).draw();
+                                }
+                            });
+                    });
+                }
+            });
+            // Posicionar el contenedor de botones
+            table.buttons().container().appendTo('#userTable_wrapper .col-md-6:eq(0)');
         });
-        // Posicionar el contenedor de botones
-        table.buttons().container().appendTo('#userTable_wrapper .col-md-6:eq(0)');
-    });
     </script>
 </body>
+
 </html>
