@@ -168,7 +168,7 @@
         $(document).ready(function() {
             var table = $('#userTable').DataTable({
                 dom: 'Blfrtip',
-                pageLength: 25,
+                pageLength: 10,
                 lengthMenu: [
                     [10, 25, 50, 100, -1],
                     [10, 25, 50, 100, "Todos"]
