@@ -12,6 +12,8 @@
   <!-- Bootstrap & DataTables CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+  <!-- DataTables Buttons CSS -->
+  <link href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" rel="stylesheet">
   <!-- Select2 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
 
@@ -62,13 +64,13 @@
         <button id="resetFilters" class="btn btn-secondary me-2">
           <i class="bi bi-arrow-counterclockwise me-1"></i> Restablecer filtros
         </button>
-        <a href="<?= base_url('indicadores/add') ?>" class="btn btn-primary">
+        <a href="<?= base_url('indicadores/add') ?>" class="btn btn-primary me-2">
           <i class="bi bi-plus-lg me-1"></i> Nuevo Indicador
         </a>
       </div>
     </div>
 
-    <!-- Div de búsqueda para Nombre Indicador -->
+    <!-- Filtro “Nombre Indicador” -->
     <div id="nombreFilter" class="mb-4 d-flex align-items-end">
       <div class="me-3">
         <label for="filterNameDropdown" class="form-label">Buscar Nombre Indicador (Lista)</label>
@@ -110,8 +112,8 @@
       </thead>
       <tfoot class="table-dark align-middle">
         <tr>
-          <th></th> <!-- ID sin filtro -->
-          <th></th> <!-- Nombre con filtro personalizado arriba -->
+          <th></th>
+          <th></th>
           <th><input type="text" placeholder="Buscar Meta Valor"></th>
           <th><input type="text" placeholder="Buscar Descripción"></th>
           <th><input type="text" placeholder="Buscar Tipo Meta"></th>
@@ -182,6 +184,11 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+  <!-- DataTables Buttons JS -->
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
   <!-- Select2 JS -->
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
@@ -189,18 +196,39 @@
     const nameStorageKey = 'indicadorNameFilter';
 
     $(document).ready(function() {
-      const table = $('#indicadorTable').DataTable({
+      // Inicializar DataTable con botón Excel y menú de longitud
+      var table = $('#indicadorTable').DataTable({
+        dom: 'Blfrtip',                   // B=Buttons, l=length, f=filter, r=processing, t=table, i=info, p=pagination
+        pageLength: 25,                  // registros iniciales
+        lengthMenu: [
+          [10, 25, 50, 100, -1],
+          [10, 25, 50, 100, "Todos"]
+        ],
+        buttons: [
+          {
+            extend: 'excelHtml5',
+            text: '📥 Exportar a Excel',
+            titleAttr: 'Exportar a Excel',
+            className: 'btn btn-success btn-sm',
+            exportOptions: {
+              columns: ':not(:last-child)'  // omitir la columna "Acciones"
+            }
+          }
+        ],
         responsive: true,
         autoWidth: false,
         language: {
-          url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json'
+          url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json',
+          lengthMenu: "Mostrar _MENU_ registros",
+          info: "Mostrando _START_ a _END_ de _TOTAL_ indicadores",
+          infoFiltered: "(filtrado de _MAX_ registros totales)",
+          zeroRecords: "No se encontraron registros"
         },
         initComplete: function() {
           this.api().columns().every(function(idx) {
-            if (idx === 0 || idx === 1) return;
-            const column = this;
-            const input = $('input', column.footer());
-            input.on('keyup change clear', function() {
+            if (idx === 0 || idx === 1) return;  // sin filtro en ID y Nombre (se filtra arriba)
+            var column = this;
+            $('input', column.footer()).on('keyup change clear', function() {
               if (column.search() !== this.value) {
                 column.search(this.value).draw();
               }
@@ -209,13 +237,17 @@
         }
       });
 
-      // Tooltips
+      // Mover botones al contenedor izquierdo (junto al menú de longitud)
+      table.buttons().container()
+           .appendTo('#indicadorTable_wrapper .col-md-6:eq(0)');
+
+      // Inicializar tooltips
       document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
         new bootstrap.Tooltip(el);
       });
 
+      // Select2 para búsqueda de Nombre Indicador
       const indicatorNames = <?= json_encode(array_values(array_unique(array_column($indicadores, 'nombre')))); ?>;
-
       $('#filterNameSelect2').select2({
         data: indicatorNames.map(n => ({ id: n, text: n })),
         placeholder: 'Buscar texto…',
@@ -223,6 +255,7 @@
         width: '200px'
       });
 
+      // Restaurar filtros de LocalStorage
       const saved = JSON.parse(localStorage.getItem(nameStorageKey) || '{}');
       if (saved.dropdown) {
         $('#filterNameDropdown').val(saved.dropdown);
@@ -233,33 +266,26 @@
         table.column(1).search(saved.select2).draw();
       }
 
+      // Cambios en los filtros de Nombre Indicador
       $('#filterNameDropdown').on('change', function() {
-        const val = this.value;
         $('#filterNameSelect2').val(null).trigger('change');
-        table.column(1).search(val).draw();
-        const st = JSON.parse(localStorage.getItem(nameStorageKey) || '{}');
-        st.dropdown = val;
-        st.select2 = '';
-        localStorage.setItem(nameStorageKey, JSON.stringify(st));
+        table.column(1).search(this.value).draw();
+        localStorage.setItem(nameStorageKey, JSON.stringify({ dropdown: this.value, select2: '' }));
       });
-
       $('#filterNameSelect2').on('change', function() {
-        const val = this.value || '';
         $('#filterNameDropdown').val('');
-        table.column(1).search(val).draw();
-        const st = JSON.parse(localStorage.getItem(nameStorageKey) || '{}');
-        st.select2 = val;
-        st.dropdown = '';
-        localStorage.setItem(nameStorageKey, JSON.stringify(st));
+        table.column(1).search(this.value || '').draw();
+        localStorage.setItem(nameStorageKey, JSON.stringify({ dropdown: '', select2: this.value }));
       });
 
+      // Reset general de filtros
       $('#resetFilters').on('click', function() {
         localStorage.removeItem(nameStorageKey);
         $('#filterNameDropdown').val('');
         $('#filterNameSelect2').val(null).trigger('change');
         table.columns().every(function(idx) {
           this.search('');
-          if (idx > 1) $('input', this.footer()).val('');
+          if (idx > 1) $(this.footer()).find('input').val('');
         });
         table.draw();
       });
