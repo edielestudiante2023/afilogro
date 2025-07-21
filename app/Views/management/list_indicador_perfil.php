@@ -9,6 +9,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- DataTables Bootstrap5 CSS -->
     <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <!-- DataTables Buttons CSS -->
+    <link href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css" rel="stylesheet">
 
     <style>
         #indicadorPerfilTable tbody tr {
@@ -27,7 +29,11 @@
     <div class="container-fluid py-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h4">Listado de Indicadores por Perfil</h1>
-            <a href="<?= base_url('indicadores_perfil/add') ?>" class="btn btn-primary">+ Asignar Indicador</a>
+            <div>
+                <a href="<?= base_url('indicadores_perfil/add') ?>" class="btn btn-primary me-2">+ Asignar Indicador</a>
+                <!-- Botón de exportar a Excel -->
+                <button id="btnExportExcel" class="btn btn-success">Descargar Excel</button>
+            </div>
         </div>
 
         <?php if (session()->getFlashdata('success')): ?>
@@ -89,13 +95,28 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <!-- DataTables Buttons JS -->
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
 
     <script>
     $(function() {
-        $('#indicadorPerfilTable').DataTable({
+        var table = $('#indicadorPerfilTable').DataTable({
+            dom: 'Bfrtip',
+            buttons: [
+                {
+                    extend: 'excelHtml5',
+                    text: 'Descargar Excel',
+                    className: 'd-none', // ocultamos el botón interno
+                }
+            ],
             responsive: true,
             autoWidth: false,
-            language: { url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json" },
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
+            },
             initComplete: function() {
                 this.api().columns().every(function() {
                     var col = this;
@@ -109,6 +130,11 @@
                     });
                 });
             }
+        });
+
+        // Enlazar nuestro botón personalizado con el de DataTables
+        $('#btnExportExcel').on('click', function() {
+            table.button(0).trigger();
         });
     });
     </script>
