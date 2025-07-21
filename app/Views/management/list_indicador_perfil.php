@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>Listado de Indicadores por Perfil – Afilogro</title>
@@ -16,6 +17,7 @@
         #indicadorPerfilTable tbody tr {
             height: 30px !important;
         }
+
         #indicadorPerfilTable td {
             padding-top: 0;
             padding-bottom: 0;
@@ -23,6 +25,7 @@
         }
     </style>
 </head>
+
 <body>
     <?= $this->include('partials/nav') ?>
 
@@ -69,20 +72,20 @@
             </tfoot>
             <tbody>
                 <?php foreach ($indicadores_perfil as $item): ?>
-                <tr>
-                    <td><?= esc($item['nombre_area']) ?></td>
-                    <td><?= esc($item['nombre_cargo']) ?></td>
-                    <td><?= esc($item['nombre_indicador']) ?></td>
-                    <td><?= esc($item['periodicidad']) ?></td>
-                    <td><?= esc($item['meta_valor']) ?></td>
-                    <td><?= esc($item['meta_descripcion']) ?></td>
-                    <td><?= esc($item['ponderacion']) ?></td>
-                    <td><?= esc($item['tipo_meta']) ?></td>
-                    <td class="text-center">
-                        <a href="<?= base_url('indicadores_perfil/edit/' . $item['id_indicador_perfil']) ?>" class="btn btn-sm btn-warning">Editar</a>
-                        <a href="<?= base_url('indicadores_perfil/delete/' . $item['id_indicador_perfil']) ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Deseas eliminar esta asignación?')">Eliminar</a>
-                    </td>
-                </tr>
+                    <tr>
+                        <td><?= esc($item['nombre_area']) ?></td>
+                        <td><?= esc($item['nombre_cargo']) ?></td>
+                        <td><?= esc($item['nombre_indicador']) ?></td>
+                        <td><?= esc($item['periodicidad']) ?></td>
+                        <td><?= esc($item['meta_valor']) ?></td>
+                        <td><?= esc($item['meta_descripcion']) ?></td>
+                        <td><?= esc($item['ponderacion']) ?></td>
+                        <td><?= esc($item['tipo_meta']) ?></td>
+                        <td class="text-center">
+                            <a href="<?= base_url('indicadores_perfil/edit/' . $item['id_indicador_perfil']) ?>" class="btn btn-sm btn-warning">Editar</a>
+                            <a href="<?= base_url('indicadores_perfil/delete/' . $item['id_indicador_perfil']) ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Deseas eliminar esta asignación?')">Eliminar</a>
+                        </td>
+                    </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
@@ -102,41 +105,45 @@
     <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
 
     <script>
-    $(function() {
-        var table = $('#indicadorPerfilTable').DataTable({
-            dom: 'Bfrtip',
-            buttons: [
-                {
+        $(function() {
+            var table = $('#indicadorPerfilTable').DataTable({
+                dom: 'Blfrtip', // Agregamos 'l' para el selector de longitud
+                buttons: [{
                     extend: 'excelHtml5',
                     text: 'Descargar Excel',
                     className: 'd-none', // ocultamos el botón interno
-                }
-            ],
-            responsive: true,
-            autoWidth: false,
-            language: {
-                url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
-            },
-            initComplete: function() {
-                this.api().columns().every(function() {
-                    var col = this;
-                    var select = $('<select class="form-select form-select-sm"><option value="">Todos</option></select>')
-                        .appendTo($(col.footer()).empty())
-                        .on('change', function() {
-                            col.search($.fn.dataTable.util.escapeRegex(this.value) ? '^'+this.value+'$' : '', true, false).draw();
+                }],
+                responsive: true,
+                autoWidth: false,
+                pageLength: 25, // Longitud por defecto (opcional)
+                lengthMenu: [
+                    [10, 25, 50, 100, -1],
+                    [10, 25, 50, 100, "Todos"]
+                ], // Opciones del selector
+                language: {
+                    url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
+                },
+                initComplete: function() {
+                    this.api().columns().every(function() {
+                        var col = this;
+                        var select = $('<select class="form-select form-select-sm"><option value="">Todos</option></select>')
+                            .appendTo($(col.footer()).empty())
+                            .on('change', function() {
+                                col.search($.fn.dataTable.util.escapeRegex(this.value) ? '^' + this.value + '$' : '', true, false).draw();
+                            });
+                        col.data().unique().sort().each(function(d) {
+                            if (d) select.append('<option value="' + d + '">' + d + '</option>');
                         });
-                    col.data().unique().sort().each(function(d) {
-                        if (d) select.append('<option value="'+d+'">'+d+'</option>');
                     });
-                });
-            }
-        });
+                }
+            });
 
-        // Enlazar nuestro botón personalizado con el de DataTables
-        $('#btnExportExcel').on('click', function() {
-            table.button(0).trigger();
+            // Enlazar nuestro botón personalizado con el de DataTables
+            $('#btnExportExcel').on('click', function() {
+                table.button(0).trigger();
+            });
         });
-    });
     </script>
 </body>
+
 </html>
