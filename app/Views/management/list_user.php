@@ -30,9 +30,17 @@
             padding: 0;
         }
 
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+            background: #fff;
+        }
+
         .table-container {
             flex: 1;
-            overflow: hidden;
+            overflow-y: auto;
+            min-height: 0;
         }
 
         .dataTables_scrollBody {
@@ -46,43 +54,44 @@
     <?= $this->include('partials/nav') ?>
 
     <div class="container-fluid">
-        <!-- Encabezado -->
-        <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
-            <h1 class="h3 m-0">Listado de Usuarios</h1>
-            <a href="<?= base_url('users/add') ?>" class="btn btn-primary">
-                <i class="bi bi-plus-lg me-1"></i> Nuevo Usuario
-            </a>
+        <!-- Encabezado y métricas fijos -->
+        <div class="sticky-header">
+            <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-white">
+                <h1 class="h3 m-0">Listado de Usuarios</h1>
+                <a href="<?= base_url('users/add') ?>" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i> Nuevo Usuario
+                </a>
+            </div>
+
+            <div class="row g-3 mb-0 px-3 pb-3 bg-white">
+                <div class="col-md-4">
+                    <div class="card text-white bg-primary h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Usuarios</h5>
+                            <p class="display-6 fw-bold"><?= esc($total_usuarios) ?></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-white bg-success h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Roles</h5>
+                            <p class="display-6 fw-bold"><?= esc($total_roles) ?></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-white bg-info h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Áreas</h5>
+                            <p class="display-6 fw-bold"><?= esc($total_areas) ?></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Resumen de métricas -->
-        <div class="row g-3 mb-5">
-            <div class="col-md-4">
-                <div class="card text-white bg-primary h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">Total Usuarios</h5>
-                        <p class="display-6 fw-bold"><?= esc($total_usuarios) ?></p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card text-white bg-success h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">Total Roles</h5>
-                        <p class="display-6 fw-bold"><?= esc($total_roles) ?></p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card text-white bg-info h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">Total Áreas</h5>
-                        <p class="display-6 fw-bold"><?= esc($total_areas) ?></p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Table -->
+        <!-- Tabla scrollable -->
         <div class="table-container p-3">
             <table id="userTable" class="table table-striped table-hover table-bordered nowrap display" style="width:100%">
                 <thead class="table-dark">
@@ -180,7 +189,7 @@
                 }],
                 responsive: true,
                 scrollX: true,
-                scrollY: 'calc(100vh - 200px)', // altura por defecto
+                scrollY: 'calc(100vh - 200px)',
                 scrollCollapse: true,
                 paging: true,
                 autoWidth: false,
@@ -199,7 +208,6 @@
                     infoFiltered: "(filtrado de _MAX_ total usuarios)"
                 },
                 initComplete: function() {
-                    // filtros en footer
                     this.api().columns().every(function() {
                         var column = this;
                         $('<input type="text" class="form-control form-control-sm" placeholder="Buscar..." />')
@@ -213,18 +221,13 @@
                 }
             });
 
-            // movemos el botón de Excel
             table.buttons().container().appendTo('#userTable_wrapper .col-md-6:eq(0)');
 
-            // al cambiar el número de filas ...
             table.on('length.dt', function(e, settings, len) {
                 if (len === 100) {
-                    // 1) quitar límite de altura al scrollBody
                     $('.dataTables_scrollBody').css('max-height', 'none');
-                    // 2) opcional: si usas flex, que el contenedor crezca
                     $('.table-container').css('flex', 'auto');
                 } else {
-                    // restaurar altura original
                     $('.dataTables_scrollBody').css('max-height', 'calc(100vh - 200px)');
                     $('.table-container').css('flex', '1');
                 }
