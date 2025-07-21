@@ -23,6 +23,9 @@
             <button id="excelExportBtn" class="btn btn-success">
                 <i class="bi bi-file-earmark-excel me-1"></i> Exportar Excel
             </button>
+            <a href="<?= base_url('perfiles/add') ?>" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i> Nuevo Perfil
+            </a>
         </div>
 
         <?php if (session()->getFlashdata('success')): ?>
