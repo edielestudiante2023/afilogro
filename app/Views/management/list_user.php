@@ -165,7 +165,6 @@
 
     <!-- DataTable Initialization -->
     <script>
-        // Opción 1: Ajustar dinámicamente el scrollY basado en la cantidad de registros
         $(document).ready(function() {
             var table = $('#userTable').DataTable({
                 dom: 'Blfrtip',
@@ -177,20 +176,11 @@
                 buttons: [{
                     extend: 'excelHtml5',
                     text: 'Exportar a Excel',
-                    titleAttr: 'Exportar a Excel',
                     className: 'btn btn-success btn-sm'
                 }],
                 responsive: true,
-                // Configuración dinámica del scroll
-                scrollY: function() {
-                    var pageLength = table.page.len();
-                    if (pageLength === -1) { // "Todos" seleccionado
-                        return false; // Desactivar scroll vertical
-                    } else {
-                        return 'calc(100vh - 200px)'; // Scroll normal
-                    }
-                }(),
                 scrollX: true,
+                scrollY: 'calc(100vh - 200px)', // altura por defecto
                 scrollCollapse: true,
                 paging: true,
                 autoWidth: false,
@@ -209,9 +199,10 @@
                     infoFiltered: "(filtrado de _MAX_ total usuarios)"
                 },
                 initComplete: function() {
+                    // filtros en footer
                     this.api().columns().every(function() {
                         var column = this;
-                        var input = $('<input type="text" class="form-control form-control-sm" placeholder="Buscar..." />')
+                        $('<input type="text" class="form-control form-control-sm" placeholder="Buscar..." />')
                             .appendTo($(column.footer()).empty())
                             .on('keyup change clear', function() {
                                 if (column.search() !== this.value) {
@@ -222,144 +213,25 @@
                 }
             });
 
-            // Event listener para cambios en el length menu
-            $('#userTable_length select').on('change', function() {
-                var selectedLength = $(this).val();
+            // movemos el botón de Excel
+            table.buttons().container().appendTo('#userTable_wrapper .col-md-6:eq(0)');
 
-                if (selectedLength === '-1') { // "Todos" seleccionado
-                    // Remover scrollY y scrollCollapse
-                    table.settings()[0].oScroll.sY = '';
-                    table.settings()[0].oScroll.bCollapse = false;
+            // al cambiar el número de filas ...
+            table.on('length.dt', function(e, settings, len) {
+                if (len === 100) {
+                    // 1) quitar límite de altura al scrollBody
+                    $('.dataTables_scrollBody').css('max-height', 'none');
+                    // 2) opcional: si usas flex, que el contenedor crezca
+                    $('.table-container').css('flex', 'auto');
                 } else {
-                    // Restaurar scrollY
-                    table.settings()[0].oScroll.sY = 'calc(100vh - 200px)';
-                    table.settings()[0].oScroll.bCollapse = true;
-                }
-
-                // Redibujar la tabla
-                table.draw();
-            });
-
-            table.buttons().container().appendTo('#userTable_wrapper .col-md-6:eq(0)');
-        });
-
-        // ==========================================
-        // Opción 2: Configuración más simple (recomendada)
-        // ==========================================
-
-        $(document).ready(function() {
-            var table = $('#userTable').DataTable({
-                dom: 'Blfrtip',
-                pageLength: 25,
-                lengthMenu: [
-                    [10, 25, 50, 100, -1],
-                    [10, 25, 50, 100, "Todos"]
-                ],
-                buttons: [{
-                    extend: 'excelHtml5',
-                    text: 'Exportar a Excel',
-                    titleAttr: 'Exportar a Excel',
-                    className: 'btn btn-success btn-sm'
-                }],
-                responsive: true,
-                // Remover scrollY para evitar conflictos con "Todos"
-                // scrollY: 'calc(100vh - 150px)', // ← Comentar esta línea
-                scrollX: true,
-                scrollCollapse: false, // ← Cambiar a false
-                paging: true,
-                autoWidth: false,
-                language: {
-                    search: "Buscar:",
-                    lengthMenu: "Mostrar _MENU_ registros",
-                    info: "Mostrando _START_ a _END_ de _TOTAL_ usuarios",
-                    paginate: {
-                        first: "Primero",
-                        last: "Último",
-                        next: "Siguiente",
-                        previous: "Anterior"
-                    },
-                    zeroRecords: "No se encontraron registros",
-                    infoEmpty: "Mostrando 0 a 0 de 0 usuarios",
-                    infoFiltered: "(filtrado de _MAX_ total usuarios)"
-                },
-                initComplete: function() {
-                    this.api().columns().every(function() {
-                        var column = this;
-                        var input = $('<input type="text" class="form-control form-control-sm" placeholder="Buscar..." />')
-                            .appendTo($(column.footer()).empty())
-                            .on('keyup change clear', function() {
-                                if (column.search() !== this.value) {
-                                    column.search(this.value).draw();
-                                }
-                            });
-                    });
+                    // restaurar altura original
+                    $('.dataTables_scrollBody').css('max-height', 'calc(100vh - 200px)');
+                    $('.table-container').css('flex', '1');
                 }
             });
-
-            table.buttons().container().appendTo('#userTable_wrapper .col-md-6:eq(0)');
-        });
-
-        // ==========================================
-        // Opción 3: Con altura máxima condicional
-        // ==========================================
-
-        $(document).ready(function() {
-            var table = $('#userTable').DataTable({
-                dom: 'Blfrtip',
-                pageLength: 25,
-                lengthMenu: [
-                    [10, 25, 50, 100, -1],
-                    [10, 25, 50, 100, "Todos"]
-                ],
-                buttons: [{
-                    extend: 'excelHtml5',
-                    text: 'Exportar a Excel',
-                    titleAttr: 'Exportar a Excel',
-                    className: 'btn btn-success btn-sm'
-                }],
-                responsive: true,
-                scrollX: true,
-                paging: true,
-                autoWidth: false,
-                language: {
-                    search: "Buscar:",
-                    lengthMenu: "Mostrar _MENU_ registros",
-                    info: "Mostrando _START_ a _END_ de _TOTAL_ usuarios",
-                    paginate: {
-                        first: "Primero",
-                        last: "Último",
-                        next: "Siguiente",
-                        previous: "Anterior"
-                    },
-                    zeroRecords: "No se encontraron registros",
-                    infoEmpty: "Mostrando 0 a 0 de 0 usuarios",
-                    infoFiltered: "(filtrado de _MAX_ total usuarios)"
-                },
-                initComplete: function() {
-                    this.api().columns().every(function() {
-                        var column = this;
-                        var input = $('<input type="text" class="form-control form-control-sm" placeholder="Buscar..." />')
-                            .appendTo($(column.footer()).empty())
-                            .on('keyup change clear', function() {
-                                if (column.search() !== this.value) {
-                                    column.search(this.value).draw();
-                                }
-                            });
-                    });
-                },
-                drawCallback: function(settings) {
-                    // Ajustar altura solo cuando no sea "Todos"
-                    if (settings._iDisplayLength !== -1) {
-                        $('.dataTables_scrollBody').css('max-height', 'calc(100vh - 200px)');
-                    } else {
-                        $('.dataTables_scrollBody').css('max-height', 'none');
-                    }
-                }
-            });
-
-            table.buttons().container().appendTo('#userTable_wrapper .col-md-6:eq(0)');
         });
     </script>
+
 </body>
 
 </html>
