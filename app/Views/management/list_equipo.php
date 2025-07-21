@@ -21,7 +21,7 @@
             box-sizing: border-box;
             padding: 3px;
         }
-        
+
         /* Asegurar que los controles de DataTable se muestren correctamente */
         .dataTables_wrapper .dataTables_length,
         .dataTables_wrapper .dataTables_filter,
@@ -109,10 +109,10 @@
             const table = $('#equipoTable').DataTable({
                 // Configuración del DOM - orden de elementos
                 dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
-                     '<"row"<"col-sm-12"B>>' +
-                     '<"row"<"col-sm-12"tr>>' +
-                     '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
-                
+                    '<"row"<"col-sm-12"B>>' +
+                    '<"row"<"col-sm-12"tr>>' +
+                    '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+
                 // Configuración de botones
                 buttons: [{
                     extend: 'excelHtml5',
@@ -123,15 +123,18 @@
                         columns: ':visible:not(:last-child)'
                     }
                 }],
-                
+
                 // Configuración de paginación y longitud
                 pageLength: 10,
-                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
-                
+                lengthMenu: [
+                    [10, 25, 50, 100, -1],
+                    [10, 25, 50, 100, "Todos"]
+                ],
+
                 // Configuración responsive
                 responsive: true,
                 autoWidth: false,
-                
+
                 // Configuración de idioma en español
                 language: {
                     lengthMenu: "Mostrar _MENU_ registros por página",
