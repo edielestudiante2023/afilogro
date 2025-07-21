@@ -6,10 +6,14 @@
     <title>Gestión de Usuarios – Afilogro</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <!-- DataTables Bootstrap 5 CSS -->
     <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <!-- DataTables Responsive CSS -->
     <link href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap5.min.css" rel="stylesheet">
+    <!-- DataTables Buttons CSS -->
+    <link href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css" rel="stylesheet">
     <style>
         html, body {
             height: 100%;
@@ -44,8 +48,8 @@
             </a>
         </div>
 
-               <!-- Resumen de métricas -->
-               <div class="row g-3 mb-5">
+        <!-- Resumen de métricas -->
+        <div class="row g-3 mb-5">
             <div class="col-md-4">
                 <div class="card text-white bg-primary h-100">
                     <div class="card-body">
@@ -72,7 +76,6 @@
             </div>
         </div>
 
-
         <!-- Table -->
         <div class="table-container p-3">
             <table id="userTable" class="table table-striped table-hover table-bordered nowrap display" style="width:100%">
@@ -85,7 +88,6 @@
                         <th>Rol</th>
                         <th>Área</th>
                         <th>Jefe Inmediato</th>
-
                         <th>Perfil de Cargo</th>
                         <th>Estado</th>
                         <th>Acciones</th>
@@ -100,7 +102,6 @@
                         <th>Rol</th>
                         <th>Área</th>
                         <th>Jefe Inmediato</th>
-
                         <th>Perfil de Cargo</th>
                         <th>Estado</th>
                         <th>Acciones</th>
@@ -117,7 +118,6 @@
                                 <td><?= esc($u['rol_nombre'] ?? $u['id_roles']) ?></td>
                                 <td><?= esc($u['area_nombre'] ?? $u['id_areas']) ?></td>
                                 <td><?= esc($u['nombre_jefe'] ?? '—') ?></td>
-
                                 <td><?= esc($u['perfil_nombre']) ?></td>
                                 <td>
                                     <?php if ($u['activo']): ?>
@@ -151,11 +151,25 @@
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.4.1/js/responsive.bootstrap5.min.js"></script>
+    <!-- DataTables Buttons JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
 
     <!-- DataTable Initialization -->
     <script>
     $(document).ready(function() {
-        $('#userTable').DataTable({
+        var table = $('#userTable').DataTable({
+            dom: 'Bfrtip',
+            buttons: [
+                {
+                    extend: 'excelHtml5',
+                    text: 'Exportar a Excel',
+                    titleAttr: 'Exportar a Excel',
+                    className: 'btn btn-success btn-sm'
+                }
+            ],
             responsive: true,
             scrollY: 'calc(100vh - 150px)',
             scrollX: true,
@@ -189,6 +203,8 @@
                 });
             }
         });
+        // Posicionar el contenedor de botones
+        table.buttons().container().appendTo('#userTable_wrapper .col-md-6:eq(0)');
     });
     </script>
 </body>

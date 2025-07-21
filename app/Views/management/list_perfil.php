@@ -4,8 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Listado de Perfiles – Afilogro</title>
+
+    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- DataTables -->
     <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <!-- DataTables Buttons -->
+    <link href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" rel="stylesheet">
 </head>
 <body>
 <?= $this->include('partials/nav') ?>
@@ -13,17 +18,17 @@
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3">Listado de Perfiles</h1>
-        <a href="<?= base_url('perfiles/add') ?>" class="btn btn-primary">
-            <i class="bi bi-plus-lg me-1"></i> Nuevo Perfil
-        </a>
+        <button id="excelExportBtn" class="btn btn-success">
+            <i class="bi bi-file-earmark-excel me-1"></i> Exportar Excel
+        </button>
     </div>
 
-    <?php if(session()->getFlashdata('success')): ?>
+    <?php if (session()->getFlashdata('success')): ?>
         <div class="alert alert-success"><?= session()->getFlashdata('success') ?></div>
     <?php endif; ?>
 
     <div class="table-responsive">
-        <table id="perfilTable" class="table table-striped table-bordered" style="width:100%">
+        <table id="perfilTable" class="table table-striped table-bordered display nowrap" style="width:100%">
             <thead class="table-dark">
                 <tr>
                     <th>Nombre Cargo</th>
@@ -45,7 +50,7 @@
                 </tr>
             </tfoot>
             <tbody>
-            <?php foreach($perfiles as $p): ?>
+            <?php foreach ($perfiles as $p): ?>
                 <tr>
                     <td><?= esc($p['nombre_cargo']) ?></td>
                     <td><?= esc($p['area']) ?></td>
@@ -69,18 +74,36 @@
 
 <?= $this->include('partials/logout') ?>
 
+<!-- JS -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+
+<!-- DataTables Buttons -->
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+
 <script>
-$(document).ready(function() {
-    // Inicializamos DataTable con filtros en el pie
+$(document).ready(function () {
     var table = $('#perfilTable').DataTable({
         responsive: true,
         autoWidth: false,
+        dom: 'Bfrtip',
+        buttons: [
+            {
+                extend: 'excelHtml5',
+                text: '📥 Descargar Excel',
+                className: 'd-none', // Ocultamos el botón de DataTable
+                title: 'Listado de Perfiles',
+                exportOptions: {
+                    columns: [0, 1, 2, 3, 4] // Omitir la columna de acciones
+                }
+            }
+        ],
         initComplete: function () {
-            // Por cada columna, asociamos el input de footer a la búsqueda
             this.api().columns().every(function () {
                 var column = this;
                 $('input', this.footer()).on('keyup change clear', function () {
@@ -90,6 +113,11 @@ $(document).ready(function() {
                 });
             });
         }
+    });
+
+    // Disparar el botón de Excel al hacer click en el personalizado
+    $('#excelExportBtn').on('click', function () {
+        table.button('.buttons-excel').trigger();
     });
 });
 </script>
