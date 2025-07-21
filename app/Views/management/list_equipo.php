@@ -12,11 +12,22 @@
     <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <!-- DataTables Responsive -->
     <link href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap5.min.css" rel="stylesheet">
+    <!-- DataTables Buttons CSS -->
+    <link href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css" rel="stylesheet">
+
     <style>
         tfoot input {
             width: 100%;
             box-sizing: border-box;
             padding: 3px;
+        }
+        
+        /* Asegurar que los controles de DataTable se muestren correctamente */
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter,
+        .dataTables_wrapper .dataTables_info,
+        .dataTables_wrapper .dataTables_paginate {
+            margin: 6px 0;
         }
     </style>
 </head>
@@ -86,27 +97,71 @@
     <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.4.1/js/responsive.bootstrap5.min.js"></script>
 
+    <!-- DataTables Buttons and dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
+
     <script>
         $(document).ready(function() {
-            // Inicializamos los inputs del tfoot
-            $('#equipoTable tfoot th').each(function() {
+            // Activamos DataTable primero
+            const table = $('#equipoTable').DataTable({
+                // Configuración del DOM - orden de elementos
+                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+                     '<"row"<"col-sm-12"B>>' +
+                     '<"row"<"col-sm-12"tr>>' +
+                     '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                
+                // Configuración de botones
+                buttons: [{
+                    extend: 'excelHtml5',
+                    text: 'Exportar a Excel',
+                    titleAttr: 'Exportar a Excel',
+                    className: 'btn btn-success btn-sm mb-3',
+                    exportOptions: {
+                        columns: ':visible:not(:last-child)'
+                    }
+                }],
+                
+                // Configuración de paginación y longitud
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
+                
+                // Configuración responsive
+                responsive: true,
+                autoWidth: false,
+                
+                // Configuración de idioma en español
+                language: {
+                    lengthMenu: "Mostrar _MENU_ registros por página",
+                    zeroRecords: "No se encontraron resultados",
+                    info: "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+                    infoEmpty: "Mostrando registros del 0 al 0 de un total de 0 registros",
+                    infoFiltered: "(filtrado de un total de _MAX_ registros)",
+                    search: "Buscar:",
+                    paginate: {
+                        first: "Primero",
+                        last: "Último",
+                        next: "Siguiente",
+                        previous: "Anterior"
+                    }
+                }
+            });
+
+            // Después de inicializar la tabla, configuramos los filtros del footer
+            $('#equipoTable tfoot th').each(function(index) {
                 const title = $(this).text();
-                if (title !== 'Acciones') {
-                    $(this).html('<input type="text" placeholder="Filtrar ' + title + '" />');
+                if (title && title !== 'Acciones' && title !== '') {
+                    $(this).html('<input type="text" placeholder="Filtrar ' + title + '" class="form-control form-control-sm" />');
                 } else {
                     $(this).html('');
                 }
             });
 
-            // Activamos DataTable con filtros por columna
-            const table = $('#equipoTable').DataTable({
-                responsive: true,
-                autoWidth: false
-            });
-
             // Aplicamos búsqueda por columna
-            table.columns().every(function() {
-                let that = this;
+            table.columns().every(function(index) {
+                const that = this;
                 $('input', this.footer()).on('keyup change clear', function() {
                     if (that.search() !== this.value) {
                         that.search(this.value).draw();
