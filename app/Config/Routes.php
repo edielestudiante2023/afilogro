@@ -211,6 +211,14 @@ $routes->post('jefatura/editarCumpleEquipo', 'JefaturaController::editarCumpleEq
 $routes->get('users/completar/(:num)', 'UserController::completarUsuario/$1');
 $routes->post('users/completar/(:num)', 'UserController::completarUsuarioPost/$1');
 
+// File: app/Config/Routes.php
+
+$routes->get('jerarquia/historialjerarquico', 'JerarquiaController::historialIndicadoresJerarquicos');
+
+$routes->get('jerarquia/equipoextendido', 'JerarquiaController::verEquipoExtendido');
+
+
+
 
 
 

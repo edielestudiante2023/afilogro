@@ -42,10 +42,10 @@
             <div class="col-md-6">
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
-                        <h5 class="card-title">Indicadores del Equipo</h5>
-                        <p class="card-text">Supervisa los indicadores reportados por tu equipo de trabajo.</p>
+                        <h5 class="card-title">Modificar Indicadores del Equipo</h5>
+                        <p class="card-text">Supervisa los indicadores reportados.</p>
                         <a href="<?= base_url('jefatura/losindicadoresdemiequipo') ?>" class="btn btn-info text-white">
-                            <i class="bi bi-people-fill me-1"></i> Ver Equipo
+                            <i class="bi bi-people-fill me-1"></i>Modifica Resultados
                         </a>
                     </div>
                 </div>
@@ -57,6 +57,28 @@
                         <p class="card-text">Consulta el historial de resultados de tu equipo.</p>
                         <a href="<?= base_url('jefatura/historiallosindicadoresdemiequipo') ?>" class="btn btn-warning">
                             <i class="bi bi-journal-text me-1"></i> Ver Historial de Equipo
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Modulo de Revisión Directa</h5>
+                        <p class="card-text">Módulo clásico de revisión directa.</p>
+                        <a href="<?= base_url('jerarquia/historialjerarquico') ?>" class="btn btn-success">
+                            <i class="bi bi-journal-text me-1"></i> Ver Historial de todas las ramas de la jerarquía
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Personal al Cargo</h5>
+                        <p class="card-text">Equipo ramificado</p>
+                        <a href="<?= base_url('jerarquia/equipoextendido') ?>" class="btn btn-success">
+                            <i class="bi bi-journal-text me-1"></i> Ver Jerarquización
                         </a>
                     </div>
                 </div>
