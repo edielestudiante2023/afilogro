@@ -221,9 +221,15 @@ class AuthController extends BaseController
     {
         $token = $this->request->getPost('token');
         $password = $this->request->getPost('password');
+        $password_confirm = $this->request->getPost('password_confirm');
 
-        if (!$token || !$password) {
+        if (!$token || !$password || !$password_confirm) {
             return redirect()->back()->with('error', 'Todos los campos son obligatorios.');
+        }
+
+        // Validar que las contraseñas coincidan
+        if ($password !== $password_confirm) {
+            return redirect()->back()->with('error', 'Las contraseñas no coinciden.');
         }
 
         $userModel = new \App\Models\UserModel();
