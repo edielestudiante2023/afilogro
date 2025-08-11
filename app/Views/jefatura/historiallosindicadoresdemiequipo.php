@@ -88,8 +88,12 @@
   <?= $this->include('partials/nav') ?>
 
   <div class="container-fluid py-4 flex-grow-1">
-
-
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h1 class="h3 mb-0">Historial de Indicadores de Mi Equipo</h1>
+      <a href="<?= base_url('jefatura/jefaturadashboard') ?>" class="btn btn-primary">
+        📊 Dashboard Jefatura
+      </a>
+    </div>
 
     <form method="get" class="row g-3 mb-4" action="<?= base_url('jefatura/historiallosindicadoresdemiequipo') ?>">
       <div class="col-auto">

@@ -31,12 +31,12 @@
     <?= $this->include('partials/nav') ?>
 
     <div class="container-fluid py-4">
-        <a href="<?= base_url('trabajador/dashboard') ?>"
-            class="btn btn-primary mb-3">
-            Ir al Dashboard del Trabajador
-        </a>
-
-        <h1 class="h3 mb-4">Mis Indicadores – Periodo <?= esc($periodo) ?></h1>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">Mis Indicadores – Periodo <?= esc($periodo) ?></h1>
+            <a href="<?= base_url('trabajador/trabajadordashboard') ?>" class="btn btn-primary">
+                🏠 Dashboard Trabajador
+            </a>
+        </div>
 
         <?php if (session()->getFlashdata('success')): ?>
             <div class="alert alert-success">

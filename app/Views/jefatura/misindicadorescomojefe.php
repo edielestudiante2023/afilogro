@@ -41,9 +41,14 @@
   <?= $this->include('partials/nav') ?>
 
   <div class="container-fluid py-4">
-    <h1 class="h3 mb-4">
-      Mis Indicadores como Jefatura – Periodo <?= esc($periodo) ?>
-    </h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h1 class="h3 mb-0">
+        Mis Indicadores como Jefatura – Periodo <?= esc($periodo) ?>
+      </h1>
+      <a href="<?= base_url('jefatura/jefaturadashboard') ?>" class="btn btn-primary">
+        📊 Dashboard Jefatura
+      </a>
+    </div>
 
     <?php if (session()->getFlashdata('success')): ?>
       <div class="alert alert-success"><?= session()->getFlashdata('success') ?></div>
