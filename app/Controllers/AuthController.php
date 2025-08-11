@@ -173,15 +173,29 @@ class AuthController extends BaseController
         </p>
         <p>Este enlace estará activo durante 1 hora. Si no solicitaste este cambio, puedes ignorar este correo.</p>
         <br>
-        <p style='color: #6c757d; font-size: 0.9em;'>Equipo Afilogro – Cycloid Talent SAS</p>
+        <p style='color: #6c757d; font-size: 0.9em;'>Equipo Kpi cycloid – Cycloid Talent SAS</p>
     ";
 
         $email->addContent("text/html", $contenidoHTML);
 
         try {
-            $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
+            $apiKey = env('SENDGRID_API_KEY');
+            if (empty($apiKey)) {
+                log_message('error', 'SENDGRID_API_KEY no está configurada');
+                return false;
+            }
+            
+            $sendgrid = new \SendGrid($apiKey);
             $response = $sendgrid->send($email);
-            return $response->statusCode() >= 200 && $response->statusCode() < 300;
+            $statusCode = $response->statusCode();
+            
+            if ($statusCode >= 200 && $statusCode < 300) {
+                log_message('info', 'Correo de recuperación enviado exitosamente a: ' . $usuario['correo']);
+                return true;
+            } else {
+                log_message('error', 'Error SendGrid - Status: ' . $statusCode . ' Body: ' . $response->body());
+                return false;
+            }
         } catch (\Exception $e) {
             log_message('error', 'Error al enviar correo de recuperación: ' . $e->getMessage());
             return false;
